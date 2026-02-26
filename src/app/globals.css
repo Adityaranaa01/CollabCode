@@ -1,0 +1,213 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap");
+
+/* ── Reset ── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: "Inter", sans-serif;
+  background-color: #050308;
+  color: #fff;
+  overflow-x: hidden;
+}
+
+/* ── Grid Background ── */
+.bg-grid {
+  background-image: radial-gradient(
+    circle at 2px 2px,
+    rgba(255, 255, 255, 0.05) 1px,
+    transparent 0
+  );
+  background-size: 40px 40px;
+}
+
+/* ── Noise Texture Overlay ── */
+.noise {
+  position: relative;
+}
+
+.noise::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.03;
+  z-index: 50;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+}
+
+/* ── Glow Gradient ── */
+.glow-gradient {
+  background: radial-gradient(
+    circle at 50% -20%,
+    rgba(137, 90, 246, 0.15) 0%,
+    transparent 50%
+  );
+}
+
+/* ── Glassmorphism ── */
+.glass {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* ── Perspective ── */
+.perspective-container {
+  perspective: 1200px;
+}
+
+/* ── Glow Effects ── */
+.glow-primary {
+  box-shadow: 0 0 20px -5px rgba(137, 90, 246, 0.4);
+}
+
+.glow-primary-strong {
+  box-shadow: 0 0 50px -12px rgba(137, 90, 246, 0.3);
+}
+
+/* ── Nav Active Glow ── */
+.nav-glow {
+  background: linear-gradient(
+    90deg,
+    rgba(137, 90, 246, 0.1) 0%,
+    transparent 100%
+  );
+  box-shadow: inset 2px 0 0 0 #895af6;
+}
+
+/* ── Custom Scrollbar ── */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(137, 90, 246, 0.2);
+  border-radius: 10px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(137, 90, 246, 0.4);
+}
+
+/* ── Editor Inner Shadow ── */
+.editor-inner-shadow {
+  box-shadow: inset 0 2px 20px 0 rgba(0, 0, 0, 0.6);
+}
+
+/* ── Cursor Blink Animation ── */
+@keyframes blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+.animate-blink {
+  animation: blink 1s step-end infinite;
+}
+
+/* ── Float Animation ── */
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px) rotateX(10deg) rotateY(-5deg);
+  }
+  50% {
+    transform: translateY(-20px) rotateX(12deg) rotateY(-3deg);
+  }
+}
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+/* ── Fade Up Animation ── */
+@keyframes fadeUp {
+  0% {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-fade-up {
+  animation: fadeUp 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* ── Pulse Dot ── */
+@keyframes pulseDot {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 6px rgba(34, 197, 94, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+  }
+}
+.animate-pulse-dot {
+  animation: pulseDot 2s infinite;
+}
+
+/* ── Typing Dots ── */
+@keyframes typingDots {
+  0%,
+  20% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+.dot {
+  animation: typingDots 1.4s infinite;
+}
+.dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+/* ── Live Pulse Glow ── */
+@keyframes livePulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(137, 90, 246, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 8px 2px rgba(137, 90, 246, 0.6);
+  }
+}
+.animate-live-pulse {
+  animation: livePulse 2s ease-in-out infinite;
+}
