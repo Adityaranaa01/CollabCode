@@ -1,36 +1,167 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🚀 CollabCode
 
-## Getting Started
+> Real-time collaborative coding workspace built with a production-grade frontend architecture.
 
-First, run the development server:
+CollabCode is a cinematic, developer-focused UI scaffold for a real-time collaborative coding platform.
+Built with modern frontend tooling and structured like a real SaaS product.
+
+This project focuses purely on **design system engineering, component architecture, and production-ready UI structure** — no backend or API logic included.
+
+---
+
+## ✨ Preview
+
+* Cinematic marketing landing page
+* Split-layout authentication experience
+* Workspace-style dashboard
+* Real-time collaboration room UI (editor + chat + terminal)
+* Fully custom design system
+* Dark-first product experience
+
+---
+
+## 🧱 Tech Stack
+
+* **Next.js 14** (App Router)
+* **TypeScript**
+* **Tailwind CSS**
+* **Lucide React**
+* **next/font (Inter + JetBrains Mono)**
+
+No UI libraries.
+No component frameworks.
+No backend.
+
+Everything is built from scratch.
+
+---
+
+## 🎯 Project Goals
+
+This project was built to:
+
+* Practice production-level frontend architecture
+* Translate high-fidelity design into scalable code
+* Implement reusable UI systems
+* Build a realistic SaaS-style product interface
+* Strengthen design-to-engineering workflow
+
+---
+
+## 🖥️ Pages Included
+
+| Route        | Description                               |
+| ------------ | ----------------------------------------- |
+| `/`          | Cinematic landing page with animated hero |
+| `/auth`      | Split-layout login/signup experience      |
+| `/dashboard` | Workspace dashboard with room cards       |
+| `/room`      | Real-time collaboration room UI           |
+| `/not-found` | Custom 404 experience                     |
+
+---
+
+## 🎨 Design System
+
+Custom theme extracted and implemented manually.
+
+**Primary Colors**
+
+* Background: `#050308`
+* Surface: `#0d0a14`
+* Primary Purple: `#8B5CF6`
+* Accent Dark: `#16121f`
+
+**Typography**
+
+* UI Font: Inter
+* Code Font: JetBrains Mono
+
+**Animations**
+
+* Cursor blink
+* Pulse-dot
+* Float
+* Fade-up
+* Typing dots
+
+No third-party animation libraries were used.
+
+---
+
+## 🧩 Component Architecture
+
+Reusable components include:
+
+* `Logo`
+* `Navbar`
+* `Footer`
+* `GlassCard`
+* `RoomCard`
+* `CreateRoomModal`
+* `CodeEditor`
+* `ChatPanel`
+* `ParticipantsList`
+
+All components are fully typed and isolated.
+
+---
+
+## 🚀 Getting Started
 
 ```bash
+# Install dependencies
+npm install
+
+# Run development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Then open:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```
+http://localhost:3000
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+## 📦 Folder Structure
 
-To learn more about Next.js, take a look at the following resources:
+```
+src/
+ ├── app/
+ │   ├── page.tsx
+ │   ├── auth/
+ │   ├── dashboard/
+ │   ├── room/
+ │   ├── not-found.tsx
+ │   └── layout.tsx
+ ├── components/
+ ├── styles/
+ └── tailwind.config.ts
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 🔮 Future Scope
 
-## Deploy on Vercel
+Planned next steps:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+* WebSocket-based real-time sync
+* Collaborative cursor presence
+* Room persistence
+* Authentication (OAuth)
+* Code execution sandbox
+* Role-based permissions
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+
+## 📌 Status
+
+UI scaffold complete.
+Backend integration planned.
+
+---
+
+
+---
+
