@@ -1,167 +1,136 @@
-# 🚀 CollabCode
+🚀 CollabCode — Frontend
 
-> Real-time collaborative coding workspace built with a production-grade frontend architecture.
+Real-time collaborative coding platform built with a production-grade frontend architecture.
 
-CollabCode is a cinematic, developer-focused UI scaffold for a real-time collaborative coding platform.
-Built with modern frontend tooling and structured like a real SaaS product.
+CollabCode is a real-time collaborative coding platform with a modern SaaS-style interface.
+This repository contains the Next.js 14 frontend application, responsible for:
 
-This project focuses purely on **design system engineering, component architecture, and production-ready UI structure** — no backend or API logic included.
+Authentication flows
 
----
+Dashboard and room management UI
 
-## ✨ Preview
+Real-time collaboration interface
 
-* Cinematic marketing landing page
-* Split-layout authentication experience
-* Workspace-style dashboard
-* Real-time collaboration room UI (editor + chat + terminal)
-* Fully custom design system
-* Dark-first product experience
+WebSocket integration
 
----
+Design system implementation
 
-## 🧱 Tech Stack
+The backend (Express + Prisma + PostgreSQL + Socket.io) is maintained separately:
 
-* **Next.js 14** (App Router)
-* **TypeScript**
-* **Tailwind CSS**
-* **Lucide React**
-* **next/font (Inter + JetBrains Mono)**
+👉 Backend Repository:
+https://github.com/Adityaranaa01/CollabCode-Backend
 
-No UI libraries.
-No component frameworks.
-No backend.
+✨ Features
 
-Everything is built from scratch.
+Cinematic landing page
 
----
+Split-layout authentication
 
-## 🎯 Project Goals
+Workspace dashboard
 
-This project was built to:
+Real-time collaboration room
 
-* Practice production-level frontend architecture
-* Translate high-fidelity design into scalable code
-* Implement reusable UI systems
-* Build a realistic SaaS-style product interface
-* Strengthen design-to-engineering workflow
+Live presence tracking
 
----
+Chat panel
 
-## 🖥️ Pages Included
+Optimistic concurrency integration
 
-| Route        | Description                               |
-| ------------ | ----------------------------------------- |
-| `/`          | Cinematic landing page with animated hero |
-| `/auth`      | Split-layout login/signup experience      |
-| `/dashboard` | Workspace dashboard with room cards       |
-| `/room`      | Real-time collaboration room UI           |
-| `/not-found` | Custom 404 experience                     |
+Plan-aware UI restrictions
 
----
+🧱 Tech Stack
 
-## 🎨 Design System
+Next.js 14 (App Router)
 
-Custom theme extracted and implemented manually.
+TypeScript
 
-**Primary Colors**
+Tailwind CSS
 
-* Background: `#050308`
-* Surface: `#0d0a14`
-* Primary Purple: `#8B5CF6`
-* Accent Dark: `#16121f`
+socket.io-client
 
-**Typography**
+Lucide React
 
-* UI Font: Inter
-* Code Font: JetBrains Mono
+next/font (Inter + JetBrains Mono)
 
-**Animations**
+No UI frameworks.
+No component libraries.
+No global state libraries.
 
-* Cursor blink
-* Pulse-dot
-* Float
-* Fade-up
-* Typing dots
+All UI built from scratch.
 
-No third-party animation libraries were used.
+🔐 Authentication Integration
 
----
+The frontend integrates with a JWT-based backend system:
 
-## 🧩 Component Architecture
+15-minute access tokens (stored in memory)
 
-Reusable components include:
+7-day rotating refresh tokens (HTTP-only cookie)
 
-* `Logo`
-* `Navbar`
-* `Footer`
-* `GlassCard`
-* `RoomCard`
-* `CreateRoomModal`
-* `CodeEditor`
-* `ChatPanel`
-* `ParticipantsList`
+Automatic refresh on reconnect
 
-All components are fully typed and isolated.
+Protected route handling via AuthContext
 
----
+No localStorage token persistence.
 
-## 🚀 Getting Started
+⚡ Real-Time Collaboration
 
-```bash
-# Install dependencies
-npm install
+Room collaboration uses:
 
-# Run development server
-npm run dev
-```
+WebSocket connection via Socket.io
 
-Then open:
+Optimistic concurrency model
 
-```
-http://localhost:3000
-```
+Version-based conflict detection
 
----
+Automatic resync on mismatch
 
-## 📦 Folder Structure
+Presence tracking
 
-```
+Chat broadcasting
+
+No CRDT used (intentional architectural tradeoff).
+
+🖥️ Pages
+Route	Description
+/	Marketing landing page
+/auth	Login / Signup experience
+/dashboard	Room listing & creation
+/room/[id]	Real-time collaboration workspace
+/not-found	Custom 404 page
+🎨 Design System
+
+Custom dark-first design system.
+
+Primary Colors
+
+Background: #050308
+
+Surface: #0d0a14
+
+Primary Purple: #8B5CF6
+
+Accent Dark: #16121f
+
+Typography
+
+UI: Inter
+
+Code: JetBrains Mono
+
+All animations handcrafted (no animation libraries).
+
+📦 Folder Structure
 src/
  ├── app/
- │   ├── page.tsx
- │   ├── auth/
- │   ├── dashboard/
- │   ├── room/
- │   ├── not-found.tsx
- │   └── layout.tsx
  ├── components/
- ├── styles/
- └── tailwind.config.ts
-```
+ ├── lib/
+ │   └── socket/
+ ├── context/
+ └── styles/
+🚀 Getting Started
+npm install
+npm run dev
 
----
+Frontend expects backend running at:
 
-## 🔮 Future Scope
-
-Planned next steps:
-
-* WebSocket-based real-time sync
-* Collaborative cursor presence
-* Room persistence
-* Authentication (OAuth)
-* Code execution sandbox
-* Role-based permissions
-
----
-
-## 📌 Status
-
-UI scaffold complete.
-Backend integration planned.
-
----
-
-
----
-
+NEXT_PUBLIC_BACKEND_URL=http://localhost:4000
