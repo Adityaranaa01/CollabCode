@@ -1,14 +1,58 @@
 "use client";
 
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Logo } from "@/components/Logo";
 import { Input } from "@/components/Input";
 import { Button } from "@/components/Button";
-import { Mail, Lock, ArrowRight } from "lucide-react";
+import { Mail, Lock, ArrowRight, User, AlertCircle } from "lucide-react";
+import { useAuth, ApiError } from "@/contexts/AuthContext";
 
 export default function AuthPageClient() {
   const [activeTab, setActiveTab] = useState<"login" | "signup">("login");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [displayName, setDisplayName] = useState("");
+  const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { login, register, isAuthenticated } = useAuth();
+  const router = useRouter();
+
+  // Redirect if already logged in
+  React.useEffect(() => {
+    if (isAuthenticated) {
+      router.replace("/dashboard");
+    }
+  }, [isAuthenticated, router]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setIsSubmitting(true);
+
+    try {
+      if (activeTab === "login") {
+        await login(email, password);
+      } else {
+        if (!displayName.trim()) {
+          setError("Display name is required");
+          setIsSubmitting(false);
+          return;
+        }
+        await register(email, password, displayName);
+      }
+      router.push("/dashboard");
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setError(err.message);
+      } else {
+        setError("Something went wrong. Please try again.");
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="bg-background-dark font-display text-white min-h-screen flex relative overflow-hidden">
@@ -31,7 +75,7 @@ export default function AuthPageClient() {
             teams.
           </p>
 
-          {/* Collaboration Preview (Option C) */}
+          {/* Collaboration Preview */}
           <div className="relative bg-[#0d0a14]/80 backdrop-blur-xl border border-white/10 rounded-xl p-6 shadow-2xl animate-float">
             <div className="flex items-center gap-2 mb-4 border-b border-white/5 pb-3">
               <div className="w-2.5 h-2.5 rounded-full bg-red-500/50" />
@@ -73,7 +117,7 @@ export default function AuthPageClient() {
 
             {/* Floating Chat Bubble */}
             <div className="absolute -right-4 -bottom-4 bg-primary px-4 py-2 rounded-2xl rounded-bl-none text-xs font-medium shadow-xl">
-              Should we use JWT? 🚀
+              Should we use JWT?
             </div>
           </div>
         </div>
@@ -90,19 +134,21 @@ export default function AuthPageClient() {
           <div className="space-y-6">
             <div className="text-center lg:text-left">
               <h2 className="text-2xl font-bold tracking-tight">
-                Welcome back
+                {activeTab === "login" ? "Welcome back" : "Create your account"}
               </h2>
               <p className="text-slate-400 text-sm mt-1">
-                Enter your details to access your workspace
+                {activeTab === "login"
+                  ? "Enter your details to access your workspace"
+                  : "Start collaborating with your team"}
               </p>
             </div>
 
             {/* Auth Card */}
             <div className="bg-white/[0.02] border border-white/5 rounded-xl overflow-hidden">
-              {/* Tab Toggle - Segmented Control Style */}
+              {/* Tab Toggle */}
               <div className="flex p-1 bg-white/5 m-4 rounded-lg border border-white/5">
                 <button
-                  onClick={() => setActiveTab("login")}
+                  onClick={() => { setActiveTab("login"); setError(""); }}
                   className={`flex-1 py-2 text-sm font-medium rounded-md transition-all duration-200 cursor-pointer ${
                     activeTab === "login"
                       ? "bg-white/10 text-white shadow-sm"
@@ -112,7 +158,7 @@ export default function AuthPageClient() {
                   Login
                 </button>
                 <button
-                  onClick={() => setActiveTab("signup")}
+                  onClick={() => { setActiveTab("signup"); setError(""); }}
                   className={`flex-1 py-2 text-sm font-medium transition-all duration-200 cursor-pointer ${
                     activeTab === "signup"
                       ? "bg-white/10 text-white shadow-sm rounded-md"
@@ -123,27 +169,51 @@ export default function AuthPageClient() {
                 </button>
               </div>
 
-              <div className="px-6 pb-8 pt-2 flex flex-col gap-5">
+              <form onSubmit={handleSubmit} className="px-6 pb-8 pt-2 flex flex-col gap-5">
+                {/* Error Banner */}
+                {error && (
+                  <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-medium">
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                    {error}
+                  </div>
+                )}
+
                 {/* Form Fields */}
                 <div className="space-y-4">
+                  {activeTab === "signup" && (
+                    <Input
+                      type="text"
+                      label="Display Name"
+                      placeholder="Your Name"
+                      icon={<User className="w-4 h-4" />}
+                      className="!py-2"
+                      value={displayName}
+                      onChange={(e) => setDisplayName(e.target.value)}
+                    />
+                  )}
                   <Input
                     type="email"
                     label="Email Address"
                     placeholder="name@company.com"
                     icon={<Mail className="w-4 h-4" />}
                     className="!py-2"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
                   />
                   <div className="flex flex-col gap-1.5">
                     <div className="flex justify-between items-center">
                       <label className="text-sm font-medium text-slate-400">
                         Password
                       </label>
-                      <a
-                        href="#"
-                        className="text-xs text-primary hover:underline"
-                      >
-                        Forgot password?
-                      </a>
+                      {activeTab === "login" && (
+                        <a
+                          href="#"
+                          className="text-xs text-primary hover:underline"
+                        >
+                          Forgot password?
+                        </a>
+                      )}
                     </div>
                     <div className="relative">
                       <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
@@ -152,6 +222,10 @@ export default function AuthPageClient() {
                       <input
                         type="password"
                         placeholder="••••••••"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                        minLength={8}
                         className="w-full pl-10 pr-4 py-2 rounded-lg border border-white/5 bg-white/5 text-white focus:ring-1 focus:ring-primary/40 focus:border-primary/40 outline-none transition-all placeholder:text-slate-600"
                       />
                     </div>
@@ -159,17 +233,23 @@ export default function AuthPageClient() {
                 </div>
 
                 {/* Primary CTA */}
-                <Link href="/dashboard">
-                  <Button
-                    variant="primary"
-                    fullWidth
-                    size="md"
-                    className="!shadow-none font-medium"
-                  >
-                    {activeTab === "login" ? "Sign In" : "Create Account"}
-                    <ArrowRight className="w-4 h-4" />
-                  </Button>
-                </Link>
+                <Button
+                  type="submit"
+                  variant="primary"
+                  fullWidth
+                  size="md"
+                  className="!shadow-none font-medium"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? (
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    <>
+                      {activeTab === "login" ? "Sign In" : "Create Account"}
+                      <ArrowRight className="w-4 h-4" />
+                    </>
+                  )}
+                </Button>
 
                 {/* Divider */}
                 <div className="relative flex items-center py-2">
@@ -180,8 +260,11 @@ export default function AuthPageClient() {
                   <div className="flex-grow border-t border-white/5" />
                 </div>
 
-                {/* GitHub Login */}
-                <button className="w-full flex items-center justify-center gap-3 py-2 px-4 rounded-lg border border-white/5 bg-white/5 hover:bg-white/10 text-slate-300 text-sm font-medium transition-all active:scale-[0.98] cursor-pointer">
+                {/* GitHub Login (placeholder) */}
+                <button
+                  type="button"
+                  className="w-full flex items-center justify-center gap-3 py-2 px-4 rounded-lg border border-white/5 bg-white/5 hover:bg-white/10 text-slate-300 text-sm font-medium transition-all active:scale-[0.98] cursor-pointer"
+                >
                   <svg
                     className="size-4 fill-current"
                     viewBox="0 0 24 24"
@@ -191,7 +274,7 @@ export default function AuthPageClient() {
                   </svg>
                   <span>GitHub</span>
                 </button>
-              </div>
+              </form>
             </div>
           </div>
 

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { TopBar } from "@/components/TopBar";
 import { ParticipantAvatar } from "@/components/ParticipantAvatar";
 import { ChatMessage } from "@/components/ChatMessage";
@@ -19,6 +20,7 @@ export default function RoomClient() {
   const [activeTab, setActiveTab] = useState<"terminal" | "console" | "output">("terminal");
 
   return (
+    <ProtectedRoute>
     <div className="bg-background-dark font-display text-slate-100 overflow-hidden h-screen flex flex-col">
       {/* Top Bar */}
       <TopBar roomName="Frontend-Fixes" showLiveBadge />
@@ -360,5 +362,6 @@ export default function RoomClient() {
         </div>
       </footer>
     </div>
+    </ProtectedRoute>
   );
 }

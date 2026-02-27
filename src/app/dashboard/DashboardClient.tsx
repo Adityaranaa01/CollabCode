@@ -1,12 +1,15 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { Sidebar } from "@/components/Sidebar";
 import { RoomCard } from "@/components/RoomCard";
 import { Modal } from "@/components/Modal";
 import { Toggle } from "@/components/Toggle";
 import { Button } from "@/components/Button";
-import { Search, PlusCircle, ChevronDown } from "lucide-react";
+import { Search, PlusCircle, ChevronDown, LogOut } from "lucide-react";
 
 interface RoomData {
   name: string;
@@ -67,6 +70,21 @@ export default function DashboardPage() {
   const [activeFilter, setActiveFilter] = useState("All Rooms");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isPrivate, setIsPrivate] = useState(false);
+  const { user, logout } = useAuth();
+  const router = useRouter();
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown on click-outside
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setShowUserMenu(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const filteredRooms = rooms.filter((room) => {
     if (activeFilter === "Active") return room.status === "live";
@@ -74,7 +92,17 @@ export default function DashboardPage() {
     return true;
   });
 
+  const initials = user?.displayName
+    ? user.displayName
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 2)
+    : "??";
+
   return (
+    <ProtectedRoute>
     <div className="flex h-screen overflow-hidden bg-background-dark">
       {/* Sidebar */}
       <Sidebar activeItem="Rooms" onCreateRoom={() => setIsModalOpen(true)} />
@@ -96,10 +124,34 @@ export default function DashboardPage() {
               />
             </div>
           </div>
-          <div className="flex items-center gap-4">
-            <div className="size-8 rounded-full bg-slate-800 border border-white/5 overflow-hidden flex items-center justify-center text-[10px] font-bold">
-              AR
-            </div>
+          <div className="flex items-center gap-4 relative" ref={menuRef}>
+            <button
+              onClick={() => setShowUserMenu((v) => !v)}
+              className="size-8 rounded-full bg-slate-800 border border-white/5 overflow-hidden flex items-center justify-center text-[10px] font-bold cursor-pointer hover:ring-2 hover:ring-primary/40 transition-all"
+            >
+              {initials}
+            </button>
+
+            {/* Dropdown */}
+            {showUserMenu && (
+              <div className="absolute right-0 top-full mt-2 w-56 bg-[#0d0a14] border border-white/10 rounded-xl shadow-2xl overflow-hidden z-[100] animate-in fade-in slide-in-from-top-2 duration-150">
+                <div className="px-4 py-3 border-b border-white/5">
+                  <p className="text-sm font-semibold text-white truncate">{user?.displayName}</p>
+                  <p className="text-xs text-slate-500 truncate">{user?.email}</p>
+                </div>
+                <button
+                  onClick={async () => {
+                    setShowUserMenu(false);
+                    await logout();
+                    router.push("/auth");
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Log out
+                </button>
+              </div>
+            )}
           </div>
         </header>
 
@@ -110,7 +162,7 @@ export default function DashboardPage() {
             <div className="flex items-end justify-between mb-12">
               <div className="space-y-1">
                 <h1 className="text-3xl font-bold tracking-tight">
-                  Welcome back, Aditya.
+                  Welcome back, {user?.displayName?.split(" ")[0] || "there"}.
                 </h1>
                 <p className="text-slate-500 text-sm font-medium">
                   You have <span className="text-primary">6 active rooms</span>{" "}
@@ -240,5 +292,6 @@ export default function DashboardPage() {
         />
       </Modal>
     </div>
+    </ProtectedRoute>
   );
 }

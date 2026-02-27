@@ -5,7 +5,7 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap");
 
-/* ── Reset ── */
+/* Reset */
 *,
 *::before,
 *::after {
@@ -24,7 +24,7 @@ body {
   overflow-x: hidden;
 }
 
-/* ── Grid Background ── */
+/* Grid Background */
 .bg-grid {
   background-image: radial-gradient(
     circle at 2px 2px,
@@ -34,7 +34,7 @@ body {
   background-size: 40px 40px;
 }
 
-/* ── Noise Texture Overlay ── */
+/* Noise Texture Overlay */
 .noise {
   position: relative;
 }
@@ -52,7 +52,7 @@ body {
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
 }
 
-/* ── Glow Gradient ── */
+/* Glow Gradient */
 .glow-gradient {
   background: radial-gradient(
     circle at 50% -20%,
@@ -61,19 +61,19 @@ body {
   );
 }
 
-/* ── Glassmorphism ── */
+/* Glassmorphism */
 .glass {
   background: rgba(255, 255, 255, 0.03);
   backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-/* ── Perspective ── */
+/* Perspective */
 .perspective-container {
   perspective: 1200px;
 }
 
-/* ── Glow Effects ── */
+/* Glow Effects */
 .glow-primary {
   box-shadow: 0 0 20px -5px rgba(137, 90, 246, 0.4);
 }
@@ -82,7 +82,7 @@ body {
   box-shadow: 0 0 50px -12px rgba(137, 90, 246, 0.3);
 }
 
-/* ── Nav Active Glow ── */
+/* Nav Active Glow */
 .nav-glow {
   background: linear-gradient(
     90deg,
@@ -92,7 +92,7 @@ body {
   box-shadow: inset 2px 0 0 0 #895af6;
 }
 
-/* ── Custom Scrollbar ── */
+/* Custom Scrollbar */
 .custom-scrollbar::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -108,12 +108,12 @@ body {
   background: rgba(137, 90, 246, 0.4);
 }
 
-/* ── Editor Inner Shadow ── */
+/* Editor Inner Shadow */
 .editor-inner-shadow {
   box-shadow: inset 0 2px 20px 0 rgba(0, 0, 0, 0.6);
 }
 
-/* ── Cursor Blink Animation ── */
+/* Cursor Blink */
 @keyframes blink {
   0%,
   100% {
@@ -127,7 +127,7 @@ body {
   animation: blink 1s step-end infinite;
 }
 
-/* ── Float Animation ── */
+/* Float */
 @keyframes float {
   0%,
   100% {
@@ -141,7 +141,7 @@ body {
   animation: float 6s ease-in-out infinite;
 }
 
-/* ── Fade Up Animation ── */
+/* Fade Up */
 @keyframes fadeUp {
   0% {
     opacity: 0;
@@ -156,7 +156,7 @@ body {
   animation: fadeUp 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* ── Pulse Dot ── */
+/* Pulse Dot */
 @keyframes pulseDot {
   0% {
     transform: scale(0.95);
@@ -175,7 +175,7 @@ body {
   animation: pulseDot 2s infinite;
 }
 
-/* ── Typing Dots ── */
+/* Typing Dots */
 @keyframes typingDots {
   0%,
   20% {
@@ -198,7 +198,7 @@ body {
   animation-delay: 0.4s;
 }
 
-/* ── Live Pulse Glow ── */
+/* Live Pulse Glow */
 @keyframes livePulse {
   0%,
   100% {

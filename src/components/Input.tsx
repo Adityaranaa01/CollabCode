@@ -8,6 +8,8 @@ interface InputProps {
   className?: string;
   value?: string;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  required?: boolean;
+  minLength?: number;
 }
 
 export const Input: React.FC<InputProps> = ({
@@ -18,6 +20,8 @@ export const Input: React.FC<InputProps> = ({
   className = "",
   value,
   onChange,
+  required,
+  minLength,
 }) => {
   return (
     <div className={`flex flex-col gap-1.5 ${className}`}>
@@ -35,6 +39,8 @@ export const Input: React.FC<InputProps> = ({
           placeholder={placeholder}
           value={value}
           onChange={onChange}
+          required={required}
+          minLength={minLength}
           className={`
             w-full ${icon ? "pl-10" : "pl-4"} pr-4 py-2.5
             rounded-lg border border-white/5 bg-white/5
