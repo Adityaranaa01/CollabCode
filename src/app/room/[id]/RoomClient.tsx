@@ -1,10 +1,18 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
+import { useRoomSocket } from "@/hooks/useRoomSocket";
+import { roomApi, Room, RoomMember } from "@/lib/api";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { TopBar } from "@/components/TopBar";
+import { Modal } from "@/components/Modal";
+import { Button } from "@/components/Button";
 import { ParticipantAvatar } from "@/components/ParticipantAvatar";
 import { ChatMessage } from "@/components/ChatMessage";
+import Editor, { type OnMount } from "@monaco-editor/react";
+import type { editor as monacoEditor } from "monaco-editor";
 import {
   FileText,
   Search,
@@ -12,356 +20,684 @@ import {
   Bug,
   User,
   Send,
-  X,
   Code2,
+  Loader2,
+  Check,
+  Copy,
+  X,
+  Clock,
+  Trash2,
+  LogOut,
 } from "lucide-react";
 
+const AVATAR_COLORS = ["purple", "orange", "blue", "emerald"] as const;
+
+function getInitials(name: string): string {
+  return name
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
+}
+
+function getAvatarColor(index: number) {
+  return AVATAR_COLORS[index % AVATAR_COLORS.length];
+}
+
+function formatTime(dateStr: string): string {
+  const date = new Date(dateStr);
+  return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+}
+
+function formatDate(dateStr: string): string {
+  return new Date(dateStr).toLocaleDateString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+}
+
+function SidebarIcon({
+  icon: Icon,
+  active,
+}: {
+  icon: React.FC<{ className?: string }>;
+  active?: boolean;
+}) {
+  return (
+    <div className="relative group">
+      <Icon
+        className={`w-5 h-5 ${
+          active ? "text-primary" : "text-slate-600 cursor-default"
+        }`}
+      />
+      {!active && (
+        <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 px-2 py-1 bg-[#1a1a2e] border border-white/10 rounded text-[10px] text-slate-400 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+          Coming soon
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function RoomClient() {
-  const [activeTab, setActiveTab] = useState<"terminal" | "console" | "output">("terminal");
+  const params = useParams();
+  const router = useRouter();
+  const roomId = params.id as string;
+  const { accessToken, user } = useAuth();
+
+  const {
+    document,
+    version,
+    participants,
+    messages,
+    connectionStatus,
+    sendPatch,
+    sendMessage,
+    sendCursor,
+  } = useRoomSocket(roomId);
+
+  const [roomMeta, setRoomMeta] = useState<Room | null>(null);
+  const [roomMembers, setRoomMembers] = useState<RoomMember[]>([]);
+  const [roomLoading, setRoomLoading] = useState(true);
+  const [chatInput, setChatInput] = useState("");
+
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [shareLink, setShareLink] = useState<string | null>(null);
+  const [shareExpiry, setShareExpiry] = useState<string | null>(null);
+  const [shareCopied, setShareCopied] = useState(false);
+  const [shareLoading, setShareLoading] = useState(false);
+  const [shareError, setShareError] = useState<string | null>(null);
+
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
+
+  const editorRef = useRef<monacoEditor.IStandaloneCodeEditor | null>(null);
+  const remoteUpdateRef = useRef(false);
+  const chatEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!accessToken || !roomId) return;
+
+    Promise.all([
+      roomApi.getRoom(accessToken, roomId),
+      roomApi.getRoomMembers(accessToken, roomId),
+    ])
+      .then(([room, members]) => {
+        setRoomMeta(room);
+        setRoomMembers(members);
+      })
+      .catch(() => {})
+      .finally(() => setRoomLoading(false));
+  }, [accessToken, roomId]);
+
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  useEffect(() => {
+    if (connectionStatus !== "error") return;
+    const timer = setTimeout(() => router.push("/dashboard"), 1500);
+    return () => clearTimeout(timer);
+  }, [connectionStatus, router]);
+
+  useEffect(() => {
+    const editor = editorRef.current;
+    if (!editor) return;
+    const model = editor.getModel();
+    if (!model) return;
+
+    if (model.getValue() !== document) {
+      remoteUpdateRef.current = true;
+      const selections = editor.getSelections();
+      model.setValue(document);
+      if (selections) editor.setSelections(selections);
+    }
+  }, [document, version]);
+
+  const handleEditorMount: OnMount = useCallback(
+    (editor) => {
+      editorRef.current = editor;
+      editor.onDidChangeCursorPosition((e) => {
+        sendCursor({ line: e.position.lineNumber, ch: e.position.column });
+      });
+    },
+    [sendCursor]
+  );
+
+  function handleEditorChange(value: string | undefined) {
+    if (value === undefined) return;
+    if (remoteUpdateRef.current) {
+      remoteUpdateRef.current = false;
+      return;
+    }
+    sendPatch(value);
+  }
+
+  function handleSendMessage() {
+    const trimmed = chatInput.trim();
+    if (!trimmed) return;
+    sendMessage(trimmed);
+    setChatInput("");
+  }
+
+  function handleChatKeyDown(e: React.KeyboardEvent) {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  }
+
+  async function handleOpenShare() {
+    if (!accessToken || !roomId) return;
+
+    setShowShareModal(true);
+    setShareLoading(true);
+    setShareError(null);
+    setShareCopied(false);
+    setShareLink(null);
+
+    try {
+      const result = await roomApi.createInvite(accessToken, roomId);
+      setShareLink(
+        `${window.location.origin}/room/${roomId}?invite=${result.token}`
+      );
+      setShareExpiry(result.expiresAt);
+    } catch {
+      setShareError(
+        "Failed to generate invite. Only the room owner can create invites."
+      );
+    } finally {
+      setShareLoading(false);
+    }
+  }
+
+  async function handleCopyLink() {
+    if (!shareLink) return;
+    try {
+      await navigator.clipboard.writeText(shareLink);
+      setShareCopied(true);
+      setTimeout(() => setShareCopied(false), 2000);
+    } catch {}
+  }
+
+  async function handleLeaveRoom() {
+    setActionLoading(true);
+    router.push("/dashboard");
+  }
+
+  async function handleDeleteRoom() {
+    if (!accessToken || !roomId) return;
+    setActionLoading(true);
+    try {
+      await roomApi.deleteRoom(accessToken, roomId);
+      router.push("/dashboard");
+    } catch {
+      setActionLoading(false);
+    }
+  }
+
+  if (!roomId) return null;
+
+  const topBarParticipants = participants.slice(0, 3).map((p, i) => ({
+    initials: getInitials(p.userId),
+    color: getAvatarColor(i),
+  }));
+
+  if (participants.length > 3) {
+    topBarParticipants.push({
+      initials: `+${participants.length - 3}`,
+      color: "orange" as const,
+    });
+  }
+
+  const isConnected = connectionStatus === "connected";
+  const isReconnecting = connectionStatus === "reconnecting";
+  const isError = connectionStatus === "error";
+  const editorLanguage = roomMeta?.language?.toLowerCase() || "plaintext";
+  const isOwner = roomMeta?.owner?.id === user?.id;
 
   return (
     <ProtectedRoute>
-    <div className="bg-background-dark font-display text-slate-100 overflow-hidden h-screen flex flex-col">
-      {/* Top Bar */}
-      <TopBar roomName="Frontend-Fixes" showLiveBadge />
+      <div className="bg-background-dark font-display text-slate-100 overflow-hidden h-screen flex flex-col">
+        <TopBar
+          roomName={roomMeta?.name || (roomLoading ? "Loading..." : roomId)}
+          showLiveBadge={isConnected}
+          participants={topBarParticipants}
+          onShare={handleOpenShare}
+          onSettings={() => {
+            setShowSettingsModal(true);
+            setDeleteConfirm(false);
+          }}
+        />
 
-      {/* Main Workspace */}
-      <main className="flex-1 flex overflow-hidden">
-        {/* Mini Sidebar */}
-        <aside className="w-12 border-r border-white/5 flex flex-col items-center py-4 gap-6 bg-black/20 backdrop-blur-md z-10">
-          <FileText className="w-5 h-5 text-primary cursor-pointer" />
-          <Search className="w-5 h-5 text-slate-500 hover:text-slate-300 cursor-pointer" />
-          <GitBranch className="w-5 h-5 text-slate-500 hover:text-slate-300 cursor-pointer" />
-          <Bug className="w-5 h-5 text-slate-500 hover:text-slate-300 cursor-pointer" />
-          <div className="mt-auto flex flex-col gap-4">
-            <User className="w-5 h-5 text-slate-500 hover:text-slate-300 cursor-pointer" />
+        {isReconnecting && (
+          <div className="h-7 bg-yellow-500/10 border-b border-yellow-500/20 flex items-center justify-center gap-2 text-[11px] text-yellow-400 font-medium">
+            <Loader2 className="w-3 h-3 animate-spin" />
+            Reconnecting to room...
           </div>
-        </aside>
+        )}
 
-        {/* Code Editor Area */}
-        <section className="flex-1 flex flex-col bg-black/40 backdrop-blur-sm relative overflow-hidden">
-          {/* Ambient Glow */}
-          <div className="absolute inset-0 pointer-events-none">
-            <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-primary/10 rounded-full blur-[120px] opacity-50" />
-            <div className="absolute bottom-[-10%] right-[-5%] w-[40%] h-[40%] bg-blue-500/5 rounded-full blur-[100px] opacity-30" />
-          </div>
+        <main className="flex-1 flex overflow-hidden">
+          {/* Mini Sidebar — intentionally disabled */}
+          <aside className="w-12 border-r border-white/5 flex flex-col items-center py-4 gap-6 bg-black/20 backdrop-blur-md z-10">
+            <SidebarIcon icon={FileText} active />
+            <SidebarIcon icon={Search} />
+            <SidebarIcon icon={GitBranch} />
+            <SidebarIcon icon={Bug} />
+            <div className="mt-auto flex flex-col gap-4">
+              <SidebarIcon icon={User} />
+            </div>
+          </aside>
 
-          {/* File Tabs */}
-          <div className="flex h-10 border-b border-white/5 bg-black/60 backdrop-blur-md">
-            <div className="flex items-center px-4 gap-2 bg-white/5 border-t-2 border-primary text-slate-100 text-xs font-medium cursor-default shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]">
-              <Code2 className="w-3.5 h-3.5 text-blue-400" />
-              App.tsx
-              <X className="w-2.5 h-2.5 text-slate-500 ml-2 cursor-pointer hover:text-slate-300" />
+          {/* Editor Area */}
+          <section className="flex-1 flex flex-col bg-black/40 backdrop-blur-sm relative overflow-hidden">
+            <div className="absolute inset-0 pointer-events-none">
+              <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-primary/10 rounded-full blur-[120px] opacity-50" />
+              <div className="absolute bottom-[-10%] right-[-5%] w-[40%] h-[40%] bg-blue-500/5 rounded-full blur-[100px] opacity-30" />
             </div>
-            <div className="flex items-center px-4 gap-2 text-slate-500 text-xs font-medium cursor-pointer hover:bg-white/5">
-              <Code2 className="w-3.5 h-3.5 text-blue-400" />
-              Header.tsx
-            </div>
-            <div className="flex items-center px-4 gap-2 text-slate-500 text-xs font-medium cursor-pointer hover:bg-white/5">
-              <FileText className="w-3.5 h-3.5 text-orange-400" />
-              index.css
-            </div>
-          </div>
 
-          {/* Editor Content */}
-          <div className="flex-1 overflow-auto custom-scrollbar font-mono text-[13px] leading-6 flex">
-            {/* Line Numbers */}
-            <div className="w-12 text-right pr-4 py-4 text-slate-700 bg-[#0b0814] select-none">
-              {Array.from({ length: 20 }, (_, i) => (
-                <React.Fragment key={i}>
-                  {i + 1}
-                  <br />
-                </React.Fragment>
-              ))}
+            <div className="flex h-10 border-b border-white/5 bg-black/60 backdrop-blur-md">
+              <div className="flex items-center px-4 gap-2 bg-white/5 border-t-2 border-primary text-slate-100 text-xs font-medium cursor-default shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]">
+                <Code2 className="w-3.5 h-3.5 text-blue-400" />
+                {roomMeta?.name || "document"}
+              </div>
             </div>
-            {/* Code Text */}
-            <div className="flex-1 py-4 px-2 relative">
-              <div className="whitespace-pre">
-                <span className="text-pink-500">import</span> React, &#123; useState &#125;{" "}
-                <span className="text-pink-500">from</span>{" "}
-                <span className="text-emerald-400">&apos;react&apos;</span>;
-              </div>
-              <div className="whitespace-pre">
-                <span className="text-pink-500">import</span> &#123; Layout &#125;{" "}
-                <span className="text-pink-500">from</span>{" "}
-                <span className="text-emerald-400">&apos;./components&apos;</span>;
-              </div>
-              <div className="whitespace-pre">&nbsp;</div>
-              <div className="whitespace-pre">
-                <span className="text-primary font-bold">export const</span>{" "}
-                <span className="text-blue-400">App</span> = () =&gt; &#123;
-              </div>
-              <div className="whitespace-pre">
-                {"  "}
-                <span className="text-primary font-bold">const</span> [count,
-                setCount] = <span className="text-blue-400">useState</span>(
-                <span className="text-orange-400">0</span>);
-              </div>
-              <div className="whitespace-pre">&nbsp;</div>
-              <div className="whitespace-pre">
-                {"  "}
-                <span className="text-slate-500">
-                  {"// Collaboration cursor simulation"}
-                </span>
-              </div>
-              <div className="whitespace-pre">
-                {"  "}
-                <span className="text-pink-500">return</span> (
-              </div>
-              <div className="whitespace-pre">
-                {"    "}
-                <span className="text-blue-300">&lt;Layout&gt;</span>
-              </div>
-              <div className="whitespace-pre">
-                {"      "}
-                <span className="text-blue-300">&lt;div</span>{" "}
-                <span className="text-orange-300">className</span>=
-                <span className="text-emerald-400">&quot;flex p-4&quot;</span>
-                <span className="text-blue-300">&gt;</span>
-              </div>
-              <div className="whitespace-pre relative">
-                {"        "}
-                <span className="text-blue-300">&lt;h1&gt;</span>Live Room:
-                Frontend-Fixes
-                <span className="text-blue-300">&lt;/h1&gt;</span>
-                {/* Blinking Cursor with label */}
-                <span className="inline-block w-[2px] h-4 bg-primary align-middle ml-[2px] animate-pulse shadow-[0_0_8px_rgba(137,90,246,0.8)]" />
-                <span className="bg-primary px-1.5 py-0.5 rounded-sm text-[9px] -mt-5 absolute ml-1 text-white font-bold shadow-lg flex items-center gap-1 font-sans">
-                  Alex typing...
-                </span>
-              </div>
-              <div className="whitespace-pre">
-                {"        "}
-                <span className="text-blue-300">&lt;button</span>{" "}
-                <span className="text-orange-300">onClick</span>=&#123;
-                <span className="text-blue-400">
-                  () =&gt; setCount(count + 1)
-                </span>
-                &#125;
-                <span className="text-blue-300">&gt;</span>
-              </div>
-              <div className="whitespace-pre">
-                {"          "}Count is: &#123;count&#125;
-              </div>
-              <div className="whitespace-pre">
-                {"        "}
-                <span className="text-blue-300">&lt;/button&gt;</span>
-              </div>
-              <div className="whitespace-pre">
-                {"      "}
-                <span className="text-blue-300">&lt;/div&gt;</span>
-              </div>
-              <div className="whitespace-pre">
-                {"    "}
-                <span className="text-blue-300">&lt;/Layout&gt;</span>
-              </div>
-              <div className="whitespace-pre">{"  "});</div>
-              <div className="whitespace-pre">&#125;;</div>
-            </div>
-          </div>
 
-          {/* Console / Terminal */}
-          <div className="h-40 border-t border-primary/20 bg-[#0d0a16] flex flex-col">
-            <div className="flex items-center px-4 h-8 gap-6 border-b border-primary/5">
-              {(["terminal", "console", "output"] as const).map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`text-[10px] font-bold uppercase tracking-widest h-full cursor-pointer ${
-                    activeTab === tab
-                      ? "text-slate-100 border-b-2 border-primary"
-                      : "text-slate-500 hover:text-slate-300"
-                  }`}
-                >
-                  {tab.charAt(0).toUpperCase() + tab.slice(1)}
-                </button>
-              ))}
-              <button
-                className="ml-auto text-slate-500 hover:text-slate-300 cursor-pointer"
-                aria-label="Close terminal"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            </div>
-            <div className="flex-1 p-3 font-mono text-[11px] overflow-auto custom-scrollbar">
-              <div className="flex gap-2 text-emerald-400">
-                <span>➜</span>
-                <span className="text-slate-300">frontend-fixes</span>
-                <span className="text-primary">git:(main)</span>
-                <span className="text-slate-100">npm run dev</span>
-              </div>
-              <div className="text-slate-400 mt-1">
-                VITE v4.3.9 ready in 125 ms
-              </div>
-              <div className="text-slate-400">
-                ➜ Local:{" "}
-                <span className="text-blue-400">http://localhost:5173/</span>
-              </div>
-              <div className="text-slate-400">
-                ➜ Network: use --host to expose
-              </div>
-              <div className="text-slate-500 mt-2">
-                10:45:22 PM [vite] hmr update /src/App.tsx
-              </div>
-              <div className="text-emerald-500 mt-1">
-                ✓ Compiled successfully.
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Right Panel */}
-        <aside className="w-80 border-l border-white/5 flex flex-col bg-black/60 backdrop-blur-xl z-10">
-          {/* Participants */}
-          <div className="p-4 border-b border-primary/5">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
-                Active Participants
-              </h3>
-              <span className="text-[10px] font-medium text-primary bg-primary/10 px-1.5 rounded">
-                4 Total
-              </span>
-            </div>
-            <div className="flex flex-col gap-2.5">
-              {/* Participant 1 */}
-              <div className="flex items-center justify-between group">
-                <div className="flex items-center gap-2.5">
-                  <ParticipantAvatar
-                    initials="AS"
-                    color="purple"
-                    status="online"
-                  />
-                  <div className="flex flex-col">
-                    <span className="text-xs font-semibold text-slate-200">
-                      Alex S.
-                    </span>
-                    <span className="text-[9px] text-primary/80">
-                      Editing App.tsx
+            <div className="flex-1 relative">
+              {connectionStatus === "connecting" && (
+                <div className="absolute inset-0 flex items-center justify-center z-10 bg-black/60">
+                  <div className="flex flex-col items-center gap-3">
+                    <Loader2 className="w-6 h-6 text-primary animate-spin" />
+                    <span className="text-xs text-slate-400">
+                      Connecting to room...
                     </span>
                   </div>
                 </div>
-              </div>
-              {/* Participant 2 */}
-              <div className="flex items-center justify-between group">
-                <div className="flex items-center gap-2.5 text-slate-400">
-                  <ParticipantAvatar
-                    initials="JD"
-                    color="orange"
-                    status="online"
-                  />
-                  <div className="flex flex-col">
-                    <span className="text-xs font-semibold text-slate-100">
-                      Jordan D. (You)
+              )}
+              {isError && (
+                <div className="absolute inset-0 flex items-center justify-center z-10 bg-black/60">
+                  <div className="flex flex-col items-center gap-3">
+                    <span className="text-sm text-red-400 font-medium">
+                      Disconnected
                     </span>
-                    <span className="text-[9px] text-slate-500">
-                      Viewing App.tsx
+                    <span className="text-xs text-slate-500">
+                      Redirecting to dashboard...
                     </span>
                   </div>
                 </div>
+              )}
+              <Editor
+                height="100%"
+                language={editorLanguage}
+                theme="vs-dark"
+                onChange={handleEditorChange}
+                onMount={handleEditorMount}
+                options={{
+                  fontSize: 13,
+                  lineHeight: 24,
+                  fontFamily: "'JetBrains Mono', monospace",
+                  minimap: { enabled: false },
+                  scrollBeyondLastLine: false,
+                  padding: { top: 16 },
+                  renderLineHighlight: "gutter",
+                  smoothScrolling: true,
+                  cursorBlinking: "smooth",
+                  cursorSmoothCaretAnimation: "on",
+                  readOnly: !isConnected,
+                }}
+              />
+            </div>
+
+            <div className="h-6 border-t border-white/5 bg-[#0d0a16] flex items-center px-3 justify-between text-[10px] text-slate-500 select-none">
+              <div className="flex items-center gap-4">
+                <span>v{version}</span>
+                {isConnected && (
+                  <span className="text-emerald-400">Connected</span>
+                )}
               </div>
-              {/* Participant 3 */}
-              <div className="flex items-center justify-between opacity-60 group">
-                <div className="flex items-center gap-2.5 text-slate-400">
-                  <ParticipantAvatar
-                    initials="ML"
-                    color="blue"
-                    status="offline"
+              <div className="flex items-center gap-4">
+                <span>{participants.length} online</span>
+              </div>
+            </div>
+          </section>
+
+          {/* Right Panel */}
+          <aside className="w-80 border-l border-white/5 flex flex-col bg-black/60 backdrop-blur-xl z-10">
+            {/* Participants */}
+            <div className="p-4 border-b border-primary/5">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                  Active Participants
+                </h3>
+                <span className="text-[10px] font-medium text-primary bg-primary/10 px-1.5 rounded">
+                  {participants.length} Total
+                </span>
+              </div>
+              <div className="flex flex-col gap-2.5">
+                {participants.map((p, i) => {
+                  const isYou = user?.id === p.userId;
+                  const displayName = isYou
+                    ? user?.displayName || "You"
+                    : `User ${i + 1}`;
+                  const initials = isYou
+                    ? getInitials(user?.displayName || "You")
+                    : `U${i + 1}`;
+                  return (
+                    <div
+                      key={p.userId}
+                      className="flex items-center justify-between group"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <ParticipantAvatar
+                          initials={initials}
+                          color={getAvatarColor(i)}
+                          status="online"
+                        />
+                        <div className="flex flex-col">
+                          <span className="text-xs font-semibold text-slate-200">
+                            {displayName}
+                            {isYou ? " (You)" : ""}
+                          </span>
+                          <span className="text-[9px] text-primary/80">
+                            In room
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+                {participants.length === 0 && (
+                  <p className="text-xs text-slate-600">No participants</p>
+                )}
+              </div>
+            </div>
+
+            {/* Chat */}
+            <div className="flex-1 flex flex-col min-h-0">
+              <div className="p-4 border-b border-primary/5 flex items-center justify-between">
+                <h3 className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
+                  Room Chat
+                </h3>
+              </div>
+              <div className="flex-1 overflow-auto p-4 flex flex-col gap-4 custom-scrollbar">
+                {messages.length === 0 && (
+                  <p className="text-xs text-slate-600 text-center mt-4">
+                    No messages yet
+                  </p>
+                )}
+                {messages.map((msg) => {
+                  const isOwn = msg.userId === user?.id;
+                  return (
+                    <ChatMessage
+                      key={msg.id}
+                      sender={isOwn ? "You" : msg.user.displayName}
+                      time={formatTime(msg.createdAt)}
+                      message={msg.content}
+                      isOwn={isOwn}
+                      color={isOwn ? "default" : "primary"}
+                    />
+                  );
+                })}
+                <div ref={chatEndRef} />
+              </div>
+              <div className="p-4 bg-background-dark">
+                <div className="relative">
+                  <input
+                    className="w-full bg-slate-800/50 border border-primary/20 rounded-lg py-2 pl-3 pr-10 text-xs focus:ring-1 focus:ring-primary focus:border-primary outline-none text-slate-100 placeholder:text-slate-600"
+                    placeholder="Type a message..."
+                    type="text"
+                    value={chatInput}
+                    onChange={(e) => setChatInput(e.target.value)}
+                    onKeyDown={handleChatKeyDown}
                   />
-                  <div className="flex flex-col">
-                    <span className="text-xs font-semibold text-slate-300">
-                      Maria L.
-                    </span>
-                    <span className="text-[9px] text-slate-500 font-medium italic">
-                      Away
-                    </span>
-                  </div>
+                  <button
+                    className="absolute right-2 top-1.5 text-primary hover:text-primary/80 cursor-pointer"
+                    aria-label="Send message"
+                    onClick={handleSendMessage}
+                  >
+                    <Send className="w-4 h-4" />
+                  </button>
                 </div>
               </div>
+            </div>
+          </aside>
+        </main>
+
+        {/* Footer — informational only, no misleading interactions */}
+        <footer className="h-6 bg-primary/90 backdrop-blur-md flex items-center px-3 justify-between text-[10px] text-white font-medium select-none shadow-[0_-4px_12px_rgba(137,90,246,0.2)]">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-1 px-1">
+              <GitBranch className="w-3 h-3" />
+              main
+            </div>
+            <div className="flex items-center gap-1 px-1">
+              {participants.length} online
             </div>
           </div>
+          <div className="flex items-center gap-4">
+            <span className="px-1">UTF-8</span>
+            <span className="px-1">{roomMeta?.language || "Plaintext"}</span>
+          </div>
+        </footer>
+      </div>
 
-          {/* Chat Section */}
-          <div className="flex-1 flex flex-col min-h-0">
-            <div className="p-4 border-b border-primary/5 flex items-center justify-between">
-              <h3 className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
-                Room Chat
-              </h3>
-            </div>
-            <div className="flex-1 overflow-auto p-4 flex flex-col gap-4 custom-scrollbar">
-              <ChatMessage
-                sender="Alex S."
-                time="10:42 PM"
-                message="I'm adding the useState hook now to handle the count state."
-                color="primary"
-              />
-              <ChatMessage
-                sender="You"
-                time="10:44 PM"
-                message="Looks good! Let me check the layout component constraints."
-                isOwn
-              />
-              <ChatMessage
-                sender="Maria L."
-                time="10:45 PM"
-                message="Should we use a reducer instead if it gets more complex?"
-                color="blue"
-              />
-              {/* Typing indicator */}
-              <div className="flex items-center gap-2 opacity-50">
-                <span className="text-[10px] font-medium text-slate-500 italic">
-                  Alex is typing
-                </span>
-                <div className="flex gap-0.5">
-                  <span className="w-1 h-1 bg-slate-500 rounded-full dot" />
-                  <span className="w-1 h-1 bg-slate-500 rounded-full dot" />
-                  <span className="w-1 h-1 bg-slate-500 rounded-full dot" />
-                </div>
-              </div>
-            </div>
-            <div className="p-4 bg-background-dark">
-              <div className="relative">
+      {/* Share Modal */}
+      <Modal
+        isOpen={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        title="Share Room"
+        footer={
+          <Button
+            variant="ghost"
+            size="md"
+            className="text-[11px] font-bold uppercase tracking-wider"
+            onClick={() => setShowShareModal(false)}
+            ariaLabel="Close share modal"
+          >
+            Done
+          </Button>
+        }
+      >
+        {shareLoading && (
+          <div className="flex items-center justify-center py-4 gap-2 text-sm text-slate-400">
+            <Loader2 className="w-4 h-4 animate-spin" />
+            Generating invite link...
+          </div>
+        )}
+        {!shareLoading && shareError && (
+          <div className="text-sm text-red-400 text-center py-4">
+            {shareError}
+          </div>
+        )}
+        {!shareLoading && shareLink && (
+          <div className="space-y-4">
+            <div className="flex flex-col gap-2">
+              <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                Invite Link
+              </label>
+              <div className="flex gap-2">
                 <input
-                  className="w-full bg-slate-800/50 border border-primary/20 rounded-lg py-2 pl-3 pr-10 text-xs focus:ring-1 focus:ring-primary focus:border-primary outline-none text-slate-100 placeholder:text-slate-600"
-                  placeholder="Type a message..."
-                  type="text"
+                  readOnly
+                  value={shareLink}
+                  className="flex-1 bg-white/[0.03] border border-white/5 rounded-lg px-3 py-2 text-xs text-slate-300 outline-none truncate"
                 />
                 <button
-                  className="absolute right-2 top-1.5 text-primary hover:text-primary/80 cursor-pointer"
-                  aria-label="Send message"
+                  onClick={handleCopyLink}
+                  className="px-3 py-2 rounded-lg bg-primary/20 text-primary hover:bg-primary/30 transition-colors cursor-pointer flex items-center gap-1.5 text-xs font-medium"
                 >
-                  <Send className="w-4 h-4" />
+                  {shareCopied ? (
+                    <>
+                      <Check className="w-3.5 h-3.5" />
+                      Copied
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-3.5 h-3.5" />
+                      Copy
+                    </>
+                  )}
                 </button>
               </div>
             </div>
+            {shareExpiry && (
+              <div className="flex items-center gap-1.5 text-[11px] text-slate-500">
+                <Clock className="w-3 h-3" />
+                Expires {formatDate(shareExpiry)}
+              </div>
+            )}
           </div>
-        </aside>
-      </main>
+        )}
+      </Modal>
 
-      {/* Footer Status Bar */}
-      <footer className="h-6 bg-primary/90 backdrop-blur-md flex items-center px-3 justify-between text-[10px] text-white font-medium select-none shadow-[0_-4px_12px_rgba(137,90,246,0.2)]">
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-1 hover:bg-white/10 px-1 cursor-pointer">
-            <GitBranch className="w-3 h-3" />
-            main*
+      {/* Settings Modal */}
+      <Modal
+        isOpen={showSettingsModal}
+        onClose={() => {
+          setShowSettingsModal(false);
+          setDeleteConfirm(false);
+        }}
+        title="Room Settings"
+        footer={
+          <Button
+            variant="ghost"
+            size="md"
+            className="text-[11px] font-bold uppercase tracking-wider"
+            onClick={() => {
+              setShowSettingsModal(false);
+              setDeleteConfirm(false);
+            }}
+            ariaLabel="Close settings"
+          >
+            Close
+          </Button>
+        }
+      >
+        <div className="space-y-4">
+          <div className="space-y-3">
+            <h4 className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+              Room Info
+            </h4>
+            <div className="grid grid-cols-2 gap-3 text-xs">
+              <div>
+                <span className="text-slate-500 block mb-0.5">Name</span>
+                <span className="text-slate-200 font-medium">
+                  {roomMeta?.name || "—"}
+                </span>
+              </div>
+              <div>
+                <span className="text-slate-500 block mb-0.5">Language</span>
+                <span className="text-slate-200 font-medium">
+                  {roomMeta?.language || "—"}
+                </span>
+              </div>
+              <div>
+                <span className="text-slate-500 block mb-0.5">Created</span>
+                <span className="text-slate-200 font-medium">
+                  {roomMeta?.createdAt ? formatDate(roomMeta.createdAt) : "—"}
+                </span>
+              </div>
+              <div>
+                <span className="text-slate-500 block mb-0.5">Owner</span>
+                <span className="text-slate-200 font-medium">
+                  {roomMeta?.owner?.displayName || "—"}
+                </span>
+              </div>
+              <div>
+                <span className="text-slate-500 block mb-0.5">Members</span>
+                <span className="text-slate-200 font-medium">
+                  {roomMembers.length}
+                </span>
+              </div>
+              <div>
+                <span className="text-slate-500 block mb-0.5">Visibility</span>
+                <span className="text-slate-200 font-medium">
+                  {roomMeta?.isPublic ? "Public" : "Private"}
+                </span>
+              </div>
+            </div>
           </div>
-          <div className="flex items-center gap-1 hover:bg-white/10 px-1 cursor-pointer">
-            0 ↓ 1 ↑
-          </div>
-          <div className="flex items-center gap-1 hover:bg-white/10 px-1 cursor-pointer">
-            ⓘ 0 ⚠ 2
+
+          <div className="border-t border-white/5 pt-4 space-y-3">
+            <h4 className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+              Actions
+            </h4>
+
+            {!isOwner && (
+              <Button
+                variant="ghost"
+                size="md"
+                className="w-full !justify-start text-slate-300 hover:text-white"
+                onClick={handleLeaveRoom}
+                disabled={actionLoading}
+                ariaLabel="Leave room"
+              >
+                <LogOut className="w-4 h-4" />
+                Leave Room
+              </Button>
+            )}
+
+            {isOwner && !deleteConfirm && (
+              <>
+                <Button
+                  variant="ghost"
+                  size="md"
+                  className="w-full !justify-start text-slate-300 hover:text-white"
+                  onClick={handleLeaveRoom}
+                  disabled={actionLoading}
+                  ariaLabel="Leave room"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Leave Room
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="md"
+                  className="w-full !justify-start text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                  onClick={() => setDeleteConfirm(true)}
+                  disabled={actionLoading}
+                  ariaLabel="Delete room"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Delete Room
+                </Button>
+              </>
+            )}
+
+            {isOwner && deleteConfirm && (
+              <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 space-y-3">
+                <p className="text-xs text-red-400">
+                  This will permanently delete the room and all its data. This
+                  action cannot be undone.
+                </p>
+                <div className="flex gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-[11px]"
+                    onClick={() => setDeleteConfirm(false)}
+                    ariaLabel="Cancel delete"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    className="!bg-red-500 hover:!bg-red-600 !shadow-none text-[11px]"
+                    onClick={handleDeleteRoom}
+                    disabled={actionLoading}
+                    ariaLabel="Confirm delete room"
+                  >
+                    {actionLoading ? "Deleting..." : "Delete Forever"}
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
-        <div className="flex items-center gap-4">
-          <div className="hover:bg-white/10 px-1 cursor-pointer">UTF-8</div>
-          <div className="hover:bg-white/10 px-1 cursor-pointer">
-            TypeScript JSX
-          </div>
-          <div className="flex items-center gap-1 hover:bg-white/10 px-1 cursor-pointer">
-            ✓ Prettier
-          </div>
-        </div>
-      </footer>
-    </div>
+      </Modal>
     </ProtectedRoute>
   );
 }

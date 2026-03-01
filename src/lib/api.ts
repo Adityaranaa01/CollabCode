@@ -97,4 +97,119 @@ export const authApi = {
     }),
 };
 
+export interface RoomOwner {
+  id: string;
+  displayName: string;
+  avatarUrl: string | null;
+}
+
+export interface Room {
+  id: string;
+  name: string;
+  language: string;
+  isPublic: boolean;
+  createdAt: string;
+  owner: RoomOwner;
+  _count: { memberships: number };
+}
+
+export interface DashboardData {
+  ownedRooms: Room[];
+  joinedRooms: Room[];
+  publicRooms: {
+    rooms: Room[];
+    nextCursor: string | null;
+  };
+}
+
+export interface RoomMember {
+  id: string;
+  userId: string;
+  roomId: string;
+  role: "OWNER" | "MEMBER";
+  joinedAt: string;
+  user: {
+    id: string;
+    displayName: string;
+    avatarUrl: string | null;
+    email: string;
+  };
+}
+
+export interface InviteResult {
+  token: string;
+  expiresAt: string;
+}
+
+function authHeaders(accessToken: string) {
+  return { Authorization: `Bearer ${accessToken}` };
+}
+
+export const roomApi = {
+  getDashboard: (accessToken: string, cursor?: string, limit?: number) => {
+    const params = new URLSearchParams();
+    if (cursor) params.set("cursor", cursor);
+    if (limit) params.set("limit", String(limit));
+    const qs = params.toString();
+    return request<DashboardData>(
+      `/api/v1/rooms/dashboard${qs ? `?${qs}` : ""}`,
+      { headers: authHeaders(accessToken) }
+    );
+  },
+
+  createRoom: (
+    accessToken: string,
+    data: { name: string; language: string; isPublic?: boolean }
+  ) =>
+    request<Room>("/api/v1/rooms", {
+      method: "POST",
+      headers: authHeaders(accessToken),
+      body: JSON.stringify(data),
+    }),
+
+  getRoom: (accessToken: string, roomId: string) =>
+    request<Room>(`/api/v1/rooms/${roomId}`, {
+      headers: authHeaders(accessToken),
+    }),
+
+  deleteRoom: (accessToken: string, roomId: string) =>
+    request<{ deletedRoomId: string }>(`/api/v1/rooms/${roomId}`, {
+      method: "DELETE",
+      headers: authHeaders(accessToken),
+    }),
+
+  joinRoom: (accessToken: string, roomId: string) =>
+    request<RoomMember>(`/api/v1/rooms/${roomId}/join`, {
+      method: "POST",
+      headers: authHeaders(accessToken),
+    }),
+
+  createInvite: (accessToken: string, roomId: string) =>
+    request<InviteResult>(`/api/v1/rooms/${roomId}/invite`, {
+      method: "POST",
+      headers: authHeaders(accessToken),
+    }),
+
+  joinByInvite: (accessToken: string, token: string) =>
+    request<RoomMember>("/api/v1/rooms/join-by-invite", {
+      method: "POST",
+      headers: authHeaders(accessToken),
+      body: JSON.stringify({ token }),
+    }),
+
+  getRoomMembers: (accessToken: string, roomId: string) =>
+    request<RoomMember[]>(`/api/v1/rooms/${roomId}/members`, {
+      headers: authHeaders(accessToken),
+    }),
+
+  removeMember: (accessToken: string, roomId: string, userId: string) =>
+    request<{ removedUserId: string; roomId: string }>(
+      `/api/v1/rooms/${roomId}/members/${userId}`,
+      {
+        method: "DELETE",
+        headers: authHeaders(accessToken),
+      }
+    ),
+};
+
 export { ApiError };
