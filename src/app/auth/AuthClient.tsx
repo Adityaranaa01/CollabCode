@@ -6,7 +6,14 @@ import Link from "next/link";
 import { Logo } from "@/components/Logo";
 import { Input } from "@/components/Input";
 import { Button } from "@/components/Button";
-import { Mail, Lock, ArrowRight, User, AlertCircle } from "lucide-react";
+import {
+  Mail,
+  Lock,
+  ArrowRight,
+  User,
+  AlertCircle,
+  ChevronLeft,
+} from "lucide-react";
 import { useAuth, ApiError } from "@/contexts/AuthContext";
 
 export default function AuthPageClient() {
@@ -67,6 +74,15 @@ export default function AuthPageClient() {
 
   return (
     <div className="bg-background-dark font-display text-white min-h-screen flex relative overflow-hidden">
+      {/* Back to Home Link */}
+      <Link
+        href="/"
+        className="absolute top-8 left-8 lg:left-auto lg:right-8 z-50 flex items-center gap-2 text-slate-400 hover:text-primary transition-all text-sm group"
+      >
+        <ChevronLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
+        Back to Home
+      </Link>
+
       {/* Left Side - Brand/Experience Panel */}
       <div className="hidden lg:flex w-1/2 relative flex-col items-center justify-center p-12 overflow-hidden border-r border-white/5 bg-gradient-to-b from-[#050308] via-[#0d0a14] to-[#050308]">
         {/* Animated Glow Blob */}

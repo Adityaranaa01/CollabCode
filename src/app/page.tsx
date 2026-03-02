@@ -210,65 +210,65 @@ export default function LandingPage() {
             </div>
           </div>
         </div>
+      </section>
 
-        {/* Supported Languages Loop */}
-        <div className="mt-32 w-full max-w-5xl mx-auto overflow-hidden relative py-10">
-          <div className="absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-[#050505] to-transparent z-10" />
-          <div className="absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-[#050505] to-transparent z-10" />
+      {/* Supported Languages Loop */}
+      <section className="w-full overflow-hidden relative py-20 bg-[#050505]">
+        <div className="absolute inset-y-0 left-0 w-48 bg-gradient-to-r from-[#050505] via-[#050505]/80 to-transparent z-10" />
+        <div className="absolute inset-y-0 right-0 w-48 bg-gradient-to-l from-[#050505] via-[#050505]/80 to-transparent z-10" />
 
-          <div className="flex animate-marquee whitespace-nowrap gap-8">
-            {[
-              "JavaScript",
-              "TypeScript",
-              "Python",
-              "Go",
-              "Rust",
-              "Java",
-              "C++",
-              "C#",
-              "PHP",
-              "Ruby",
-              "Kotlin",
-              "Swift",
-              "Bash",
-              "SQL",
-              "HTML",
-              "CSS",
-            ].map((lang) => (
-              <div
-                key={lang}
-                className="px-6 py-2 rounded-full border border-white/10 bg-white/5 text-zinc-400 text-sm font-medium hover:border-brand-purple/50 hover:text-white hover:bg-brand-purple/10 transition-all cursor-default"
-              >
-                {lang}
-              </div>
-            ))}
-            {/* Duplicate for infinite loop */}
-            {[
-              "JavaScript",
-              "TypeScript",
-              "Python",
-              "Go",
-              "Rust",
-              "Java",
-              "C++",
-              "C#",
-              "PHP",
-              "Ruby",
-              "Kotlin",
-              "Swift",
-              "Bash",
-              "SQL",
-              "HTML",
-              "CSS",
-            ].map((lang) => (
-              <div
-                key={`${lang}-clone`}
-                className="px-6 py-2 rounded-full border border-white/10 bg-white/5 text-zinc-400 text-sm font-medium hover:border-brand-purple/50 hover:text-white hover:bg-brand-purple/10 transition-all cursor-default"
-              >
-                {lang}
-              </div>
-            ))}
-          </div>
+        <div className="flex animate-marquee whitespace-nowrap gap-8 w-max">
+          {[
+            "JavaScript",
+            "TypeScript",
+            "Python",
+            "Go",
+            "Rust",
+            "Java",
+            "C++",
+            "C#",
+            "PHP",
+            "Ruby",
+            "Kotlin",
+            "Swift",
+            "Bash",
+            "SQL",
+            "HTML",
+            "CSS",
+          ].map((lang) => (
+            <div
+              key={lang}
+              className="px-8 py-3 rounded-full border border-white/10 bg-white/5 text-zinc-400 text-sm font-medium hover:border-brand-purple/50 hover:text-white hover:bg-brand-purple/10 transition-all cursor-default"
+            >
+              {lang}
+            </div>
+          ))}
+          {/* Duplicate for infinite loop */}
+          {[
+            "JavaScript",
+            "TypeScript",
+            "Python",
+            "Go",
+            "Rust",
+            "Java",
+            "C++",
+            "C#",
+            "PHP",
+            "Ruby",
+            "Kotlin",
+            "Swift",
+            "Bash",
+            "SQL",
+            "HTML",
+            "CSS",
+          ].map((lang) => (
+            <div
+              key={`${lang}-clone`}
+              className="px-8 py-3 rounded-full border border-white/10 bg-white/5 text-zinc-400 text-sm font-medium hover:border-brand-purple/50 hover:text-white hover:bg-brand-purple/10 transition-all cursor-default"
+            >
+              {lang}
+            </div>
+          ))}
         </div>
       </section>
 

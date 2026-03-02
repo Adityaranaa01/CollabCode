@@ -88,7 +88,7 @@ export default function RoomClient() {
   const { accessToken, user } = useAuth();
 
   const {
-    document,
+    document: roomContent,
     version,
     participants,
     messages,
@@ -117,6 +117,25 @@ export default function RoomClient() {
   const editorRef = useRef<monacoEditor.IStandaloneCodeEditor | null>(null);
   const remoteUpdateRef = useRef(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
+
+  const handleDownload = useCallback(() => {
+    if (typeof window === "undefined" || !editorRef.current) return;
+
+    const content = editorRef.current.getValue();
+    const fileName = roomMeta?.name
+      ? `${roomMeta.name.replace(/[^a-z0-9]/gi, "-").toLowerCase()}.txt`
+      : "collabcode-file.txt";
+
+    const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }, [roomMeta]);
 
   useEffect(() => {
     if (!accessToken || !roomId) return;
@@ -149,13 +168,13 @@ export default function RoomClient() {
     const model = editor.getModel();
     if (!model) return;
 
-    if (model.getValue() !== document) {
+    if (model.getValue() !== roomContent) {
       remoteUpdateRef.current = true;
       const selections = editor.getSelections();
-      model.setValue(document);
+      model.setValue(roomContent);
       if (selections) editor.setSelections(selections);
     }
-  }, [document, version]);
+  }, [roomContent, version]);
 
   const handleEditorMount: OnMount = useCallback(
     (editor) => {
@@ -164,7 +183,7 @@ export default function RoomClient() {
         sendCursor({ line: e.position.lineNumber, ch: e.position.column });
       });
     },
-    [sendCursor]
+    [sendCursor],
   );
 
   function handleEditorChange(value: string | undefined) {
@@ -202,12 +221,12 @@ export default function RoomClient() {
     try {
       const result = await roomApi.createInvite(accessToken, roomId);
       setShareLink(
-        `${window.location.origin}/room/${roomId}?invite=${result.token}`
+        `${window.location.origin}/room/${roomId}?invite=${result.token}`,
       );
       setShareExpiry(result.expiresAt);
     } catch {
       setShareError(
-        "Failed to generate invite. Only the room owner can create invites."
+        "Failed to generate invite. Only the room owner can create invites.",
       );
     } finally {
       setShareLoading(false);
@@ -267,6 +286,7 @@ export default function RoomClient() {
           showLiveBadge={isConnected}
           participants={topBarParticipants}
           onShare={handleOpenShare}
+          onDownload={handleDownload}
           onSettings={() => {
             setShowSettingsModal(true);
             setDeleteConfirm(false);
@@ -287,9 +307,6 @@ export default function RoomClient() {
             <SidebarIcon icon={Search} />
             <SidebarIcon icon={GitBranch} />
             <SidebarIcon icon={Bug} />
-            <div className="mt-auto flex flex-col gap-4">
-              <SidebarIcon icon={User} />
-            </div>
           </aside>
 
           {/* Editor Area */}

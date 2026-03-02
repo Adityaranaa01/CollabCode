@@ -6,14 +6,26 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { Logo } from "./Logo";
 import { ParticipantAvatar } from "./ParticipantAvatar";
-import { Share, ArrowLeft, User, Settings, LogOut, ChevronDown } from "lucide-react";
+import {
+  Share,
+  ArrowLeft,
+  User,
+  Settings,
+  LogOut,
+  ChevronDown,
+  Download,
+} from "lucide-react";
 import { Button } from "./Button";
 
 interface TopBarProps {
   roomName?: string;
   showLiveBadge?: boolean;
-  participants?: { initials: string; color: "purple" | "orange" | "blue" | "emerald" }[];
+  participants?: {
+    initials: string;
+    color: "purple" | "orange" | "blue" | "emerald";
+  }[];
   onShare?: () => void;
+  onDownload?: () => void;
   onSettings?: () => void;
   className?: string;
 }
@@ -23,6 +35,7 @@ export const TopBar: React.FC<TopBarProps> = ({
   showLiveBadge = true,
   participants = [],
   onShare,
+  onDownload,
   onSettings,
   className = "",
 }) => {
@@ -77,7 +90,23 @@ export const TopBar: React.FC<TopBarProps> = ({
       </div>
 
       <div className="flex items-center gap-3">
-        <Button variant="primary" size="sm" ariaLabel="Share room" onClick={onShare}>
+        <Button
+          variant="ghost"
+          size="sm"
+          ariaLabel="Download code"
+          onClick={onDownload}
+          className="text-slate-400 hover:text-primary hover:bg-primary/5 border-white/5"
+        >
+          <Download className="w-3.5 h-3.5" />
+          Download
+        </Button>
+
+        <Button
+          variant="primary"
+          size="sm"
+          ariaLabel="Share room"
+          onClick={onShare}
+        >
           <Share className="w-3.5 h-3.5" />
           Share
         </Button>

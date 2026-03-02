@@ -19,12 +19,20 @@ interface AuthState {
 
 interface AuthContextValue extends AuthState {
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, displayName: string) => Promise<void>;
+  register: (
+    email: string,
+    password: string,
+    displayName: string,
+  ) => Promise<void>;
   logout: () => Promise<void>;
   refreshAccessToken: () => Promise<string | null>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
+
+// Store the initial refresh promise outside the component to prevent multiple
+// simultaneous refreshes during React Strict Mode or fast re-mounts.
+let initialRefreshPromise: Promise<{ accessToken: string }> | null = null;
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [accessToken, setAccessToken] = useState<string | null>(null);
@@ -54,21 +62,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [fetchUser]);
 
-  const login = useCallback(async (email: string, password: string) => {
-    const result = await authApi.login(email, password);
-    setAccessToken(result.accessToken);
-    await fetchUser(result.accessToken);
-  }, [fetchUser]);
+  const login = useCallback(
+    async (email: string, password: string) => {
+      const result = await authApi.login(email, password);
+      setAccessToken(result.accessToken);
+      await fetchUser(result.accessToken);
+    },
+    [fetchUser],
+  );
 
-  const register = useCallback(async (
-    email: string,
-    password: string,
-    displayName: string
-  ) => {
-    const result = await authApi.register(email, password, displayName);
-    setAccessToken(result.accessToken);
-    await fetchUser(result.accessToken);
-  }, [fetchUser]);
+  const register = useCallback(
+    async (email: string, password: string, displayName: string) => {
+      const result = await authApi.register(email, password, displayName);
+      setAccessToken(result.accessToken);
+      await fetchUser(result.accessToken);
+    },
+    [fetchUser],
+  );
 
   const logout = useCallback(async () => {
     await authApi.logout();
@@ -80,14 +90,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     let cancelled = false;
 
     async function init() {
+      // Use the global promise if it exists, otherwise create it
+      if (!initialRefreshPromise) {
+        initialRefreshPromise = authApi.refresh();
+      }
+
       try {
-        const result = await authApi.refresh();
+        const result = await initialRefreshPromise;
         if (!cancelled) {
           setAccessToken(result.accessToken);
           await fetchUser(result.accessToken);
         }
       } catch {
         // no valid refresh cookie
+        initialRefreshPromise = null;
       } finally {
         if (!cancelled) {
           setIsLoading(false);
@@ -96,15 +112,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     init();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [fetchUser]);
 
   useEffect(() => {
     if (!accessToken) return;
 
-    const interval = setInterval(async () => {
-      await refreshAccessToken();
-    }, 13 * 60 * 1000);
+    const interval = setInterval(
+      async () => {
+        await refreshAccessToken();
+      },
+      13 * 60 * 1000,
+    );
 
     return () => clearInterval(interval);
   }, [accessToken, refreshAccessToken]);
@@ -120,12 +141,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       logout,
       refreshAccessToken,
     }),
-    [accessToken, user, isLoading, login, register, logout, refreshAccessToken]
+    [accessToken, user, isLoading, login, register, logout, refreshAccessToken],
   );
 
-  return (
-    <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth(): AuthContextValue {
