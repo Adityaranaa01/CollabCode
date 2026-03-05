@@ -87,6 +87,11 @@ export default function ProfileClient() {
                     <h1 className="text-2xl font-bold tracking-tight text-white">
                       {user?.displayName || "—"}
                     </h1>
+                    {user?.username && (
+                      <p className="text-sm text-primary/80 font-medium mt-0.5">
+                        @{user.username}
+                      </p>
+                    )}
                     <div className="flex items-center gap-4 mt-2">
                       <div className="flex items-center gap-1.5 text-sm text-slate-400">
                         <Mail className="w-3.5 h-3.5" />

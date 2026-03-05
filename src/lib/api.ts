@@ -49,6 +49,7 @@ export interface AuthTokens {
 export interface UserProfile {
   id: string;
   email: string;
+  username: string;
   displayName: string;
   avatarUrl: string | null;
   plan: {
@@ -62,16 +63,16 @@ export interface UserProfile {
 }
 
 export const authApi = {
-  register: (email: string, password: string, displayName: string) =>
+  register: (email: string, username: string, password: string, displayName: string) =>
     request<AuthTokens>("/api/v1/auth/register", {
       method: "POST",
-      body: JSON.stringify({ email, password, displayName }),
+      body: JSON.stringify({ email, username, password, displayName }),
     }),
 
-  login: (email: string, password: string) =>
+  login: (identifier: string, password: string) =>
     request<AuthTokens>("/api/v1/auth/login", {
       method: "POST",
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ identifier, password }),
     }),
 
   refresh: () =>

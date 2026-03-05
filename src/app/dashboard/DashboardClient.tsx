@@ -186,15 +186,15 @@ export default function DashboardPage() {
             </div>
             <div className="flex items-center gap-4 relative" ref={menuRef}>
               <div
-                className="flex items-center gap-3 px-3 py-1.5 rounded-full bg-white/[0.03] border border-white/[0.05] hover:bg-white/[0.05] transition-colors cursor-pointer"
+                className="group flex items-center gap-0 rounded-full bg-white/[0.03] border border-white/[0.05] hover:border-primary/30 transition-all duration-300 cursor-pointer overflow-hidden"
                 onClick={() => setShowUserMenu((v) => !v)}
               >
-                <span className="text-xs font-medium text-slate-300 hidden md:block">
+                <span className="max-w-0 group-hover:max-w-[120px] overflow-hidden transition-all duration-300 ease-in-out whitespace-nowrap text-xs font-medium text-slate-300 group-hover:pl-3.5 group-hover:pr-1.5">
                   {user?.displayName?.split(" ")[0]}
                 </span>
-                <button className="size-7 rounded-full bg-gradient-to-br from-primary to-purple-600 border border-white/10 overflow-hidden flex items-center justify-center text-[10px] font-bold text-white shadow-lg">
+                <span className="size-8 rounded-full bg-gradient-to-br from-primary to-purple-600 border border-white/10 flex items-center justify-center text-[10px] font-bold text-white shadow-lg shrink-0">
                   {initials}
-                </button>
+                </span>
               </div>
 
               {showUserMenu && (

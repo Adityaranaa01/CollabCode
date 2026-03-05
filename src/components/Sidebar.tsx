@@ -37,7 +37,7 @@ const navItems: SidebarItem[] = [
   {
     icon: <Settings className="w-[22px] h-[22px]" />,
     label: "Settings",
-    href: "#",
+    href: "/profile",
   },
 ];
 

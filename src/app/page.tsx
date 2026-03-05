@@ -2,8 +2,64 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/Button";
+import { useAuth } from "@/contexts/AuthContext";
+
+function NavButtons() {
+  const { user, isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) return null;
+
+  if (isAuthenticated && user) {
+    const initials = user.displayName
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+
+    return (
+      <div className="flex gap-8 items-center">
+        <Link
+          href="/dashboard"
+          className="text-sm text-zinc-400 hover:text-white transition-colors"
+        >
+          Dashboard
+        </Link>
+        <Link
+          href="/profile"
+          className="group flex items-center gap-0 rounded-full bg-white/5 border border-white/10 hover:border-brand-purple/30 transition-all duration-300 overflow-hidden"
+        >
+          <span className="max-w-0 group-hover:max-w-[120px] overflow-hidden transition-all duration-300 ease-in-out whitespace-nowrap text-sm font-medium text-zinc-200 group-hover:pl-4 group-hover:pr-2">
+            {user.displayName.split(" ")[0]}
+          </span>
+          <span className="size-9 rounded-full bg-brand-purple/20 border border-brand-purple/30 flex items-center justify-center text-xs font-bold text-brand-purple shrink-0">
+            {initials}
+          </span>
+        </Link>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex gap-8 items-center">
+      <Link
+        href="/auth?mode=signup"
+        className="text-sm text-zinc-400 hover:text-white transition-colors"
+      >
+        Sign Up
+      </Link>
+      <Link
+        href="/auth?mode=login"
+        className="px-5 py-2 rounded-full glass text-sm font-medium hover:bg-white/10 transition-all"
+      >
+        Log In
+      </Link>
+    </div>
+  );
+}
 
 export default function LandingPage() {
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
@@ -42,20 +98,7 @@ export default function LandingPage() {
         <div className="text-xl font-bold tracking-tighter">
           COLLABCODE<span className="text-brand-purple">.</span>
         </div>
-        <div className="flex gap-8 items-center">
-          <Link
-            href="/auth?mode=signup"
-            className="text-sm text-zinc-400 hover:text-white transition-colors"
-          >
-            Sign Up
-          </Link>
-          <Link
-            href="/auth?mode=login"
-            className="px-5 py-2 rounded-full glass text-sm font-medium hover:bg-white/10 transition-all"
-          >
-            Log In
-          </Link>
-        </div>
+        <NavButtons />
       </nav>
 
       {/* Hero Section */}
