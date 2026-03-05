@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTheme } from "@/contexts/ThemeContext";
 import { useRoomSocket } from "@/hooks/useRoomSocket";
 import { roomApi, Room, RoomMember } from "@/lib/api";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
@@ -30,7 +31,7 @@ import {
   LogOut,
 } from "lucide-react";
 
-const AVATAR_COLORS = ["purple", "orange", "blue", "emerald"] as const;
+const AVATAR_COLORS = ["teal", "cyan", "emerald", "sky"] as const;
 
 function getInitials(name: string): string {
   return name
@@ -69,11 +70,11 @@ function SidebarIcon({
     <div className="relative group">
       <Icon
         className={`w-5 h-5 ${
-          active ? "text-primary" : "text-slate-600 cursor-default"
+          active ? "text-primary" : "text-foreground/20 cursor-default"
         }`}
       />
       {!active && (
-        <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 px-2 py-1 bg-[#1a1a2e] border border-white/10 rounded text-[10px] text-slate-400 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+        <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 px-2 py-1 bg-card border border-border rounded text-[10px] text-foreground/40 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
           Coming soon
         </div>
       )}
@@ -86,6 +87,7 @@ export default function RoomClient() {
   const router = useRouter();
   const roomId = params.id as string;
   const { accessToken, user } = useAuth();
+  const { isDark } = useTheme();
 
   const {
     document: roomContent,
@@ -268,7 +270,7 @@ export default function RoomClient() {
   if (participants.length > 3) {
     topBarParticipants.push({
       initials: `+${participants.length - 3}`,
-      color: "orange" as const,
+      color: "cyan" as const,
     });
   }
 
@@ -280,7 +282,7 @@ export default function RoomClient() {
 
   return (
     <ProtectedRoute>
-      <div className="bg-background-dark font-display text-slate-100 overflow-hidden h-screen flex flex-col">
+      <div className="bg-background font-sans text-foreground overflow-hidden h-screen flex flex-col">
         <TopBar
           roomName={roomMeta?.name || (roomLoading ? "Loading..." : roomId)}
           showLiveBadge={isConnected}
@@ -294,15 +296,14 @@ export default function RoomClient() {
         />
 
         {isReconnecting && (
-          <div className="h-7 bg-yellow-500/10 border-b border-yellow-500/20 flex items-center justify-center gap-2 text-[11px] text-yellow-400 font-medium">
+          <div className="h-7 bg-yellow-500/10 border-b border-yellow-500/20 flex items-center justify-center gap-2 text-[11px] text-yellow-500 font-bold uppercase tracking-widest">
             <Loader2 className="w-3 h-3 animate-spin" />
             Reconnecting to room...
           </div>
         )}
 
         <main className="flex-1 flex overflow-hidden">
-          {/* Mini Sidebar — intentionally disabled */}
-          <aside className="w-12 border-r border-white/5 flex flex-col items-center py-4 gap-6 bg-black/20 backdrop-blur-md z-10">
+          <aside className="w-12 border-r border-border flex flex-col items-center py-4 gap-6 bg-background backdrop-blur-md z-10">
             <SidebarIcon icon={FileText} active />
             <SidebarIcon icon={Search} />
             <SidebarIcon icon={GitBranch} />
@@ -310,37 +311,37 @@ export default function RoomClient() {
           </aside>
 
           {/* Editor Area */}
-          <section className="flex-1 flex flex-col bg-black/40 backdrop-blur-sm relative overflow-hidden">
+          <section className="flex-1 flex flex-col bg-background/40 backdrop-blur-sm relative overflow-hidden">
             <div className="absolute inset-0 pointer-events-none">
               <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-primary/10 rounded-full blur-[120px] opacity-50" />
-              <div className="absolute bottom-[-10%] right-[-5%] w-[40%] h-[40%] bg-blue-500/5 rounded-full blur-[100px] opacity-30" />
+              <div className="absolute bottom-[-10%] right-[-5%] w-[40%] h-[40%] bg-accent/5 rounded-full blur-[100px] opacity-30" />
             </div>
 
-            <div className="flex h-10 border-b border-white/5 bg-black/60 backdrop-blur-md">
-              <div className="flex items-center px-4 gap-2 bg-white/5 border-t-2 border-primary text-slate-100 text-xs font-medium cursor-default shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]">
-                <Code2 className="w-3.5 h-3.5 text-blue-400" />
+            <div className="flex h-10 border-b border-border bg-background/80 backdrop-blur-md">
+              <div className="flex items-center px-4 gap-2 bg-card border-t-2 border-primary text-foreground text-xs font-bold cursor-default shadow-inner">
+                <Code2 className="w-3.5 h-3.5 text-primary" />
                 {roomMeta?.name || "document"}
               </div>
             </div>
 
             <div className="flex-1 relative">
               {connectionStatus === "connecting" && (
-                <div className="absolute inset-0 flex items-center justify-center z-10 bg-black/60">
+                <div className="absolute inset-0 flex items-center justify-center z-10 bg-background/60 backdrop-blur-sm">
                   <div className="flex flex-col items-center gap-3">
                     <Loader2 className="w-6 h-6 text-primary animate-spin" />
-                    <span className="text-xs text-slate-400">
+                    <span className="text-xs font-bold uppercase tracking-widest text-foreground/40">
                       Connecting to room...
                     </span>
                   </div>
                 </div>
               )}
               {isError && (
-                <div className="absolute inset-0 flex items-center justify-center z-10 bg-black/60">
+                <div className="absolute inset-0 flex items-center justify-center z-10 bg-background/60 backdrop-blur-sm">
                   <div className="flex flex-col items-center gap-3">
-                    <span className="text-sm text-red-400 font-medium">
+                    <span className="text-sm text-red-500 font-black uppercase tracking-widest">
                       Disconnected
                     </span>
-                    <span className="text-xs text-slate-500">
+                    <span className="text-xs font-bold uppercase tracking-widest text-foreground/40">
                       Redirecting to dashboard...
                     </span>
                   </div>
@@ -349,7 +350,7 @@ export default function RoomClient() {
               <Editor
                 height="100%"
                 language={editorLanguage}
-                theme="vs-dark"
+                theme={isDark ? "vs-dark" : "light"}
                 onChange={handleEditorChange}
                 onMount={handleEditorMount}
                 options={{
@@ -368,11 +369,11 @@ export default function RoomClient() {
               />
             </div>
 
-            <div className="h-6 border-t border-white/5 bg-[#0d0a16] flex items-center px-3 justify-between text-[10px] text-slate-500 select-none">
+            <div className="h-6 border-t border-border bg-card flex items-center px-3 justify-between text-[10px] text-foreground/40 font-bold uppercase tracking-widest select-none">
               <div className="flex items-center gap-4">
                 <span>v{version}</span>
                 {isConnected && (
-                  <span className="text-emerald-400">Connected</span>
+                  <span className="text-primary">Connected</span>
                 )}
               </div>
               <div className="flex items-center gap-4">
@@ -382,14 +383,14 @@ export default function RoomClient() {
           </section>
 
           {/* Right Panel */}
-          <aside className="w-80 border-l border-white/5 flex flex-col bg-black/60 backdrop-blur-xl z-10">
+          <aside className="w-80 border-l border-border flex flex-col bg-card backdrop-blur-xl z-10">
             {/* Participants */}
-            <div className="p-4 border-b border-primary/5">
+            <div className="p-4 border-b border-border">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                <h3 className="text-[10px] font-black uppercase tracking-widest text-foreground/40">
                   Active Participants
                 </h3>
-                <span className="text-[10px] font-medium text-primary bg-primary/10 px-1.5 rounded">
+                <span className="text-[10px] font-black text-primary bg-primary/10 px-1.5 py-0.5 rounded border border-primary/20 uppercase tracking-widest">
                   {participants.length} Total
                 </span>
               </div>
@@ -409,16 +410,16 @@ export default function RoomClient() {
                     >
                       <div className="flex items-center gap-2.5">
                         <ParticipantAvatar
-                          initials={initials}
-                          color={getAvatarColor(i)}
-                          status="online"
+                           initials={initials}
+                           color={getAvatarColor(i)}
+                           status="online"
                         />
                         <div className="flex flex-col">
-                          <span className="text-xs font-semibold text-slate-200">
+                          <span className="text-xs font-black text-foreground">
                             {displayName}
                             {isYou ? " (You)" : ""}
                           </span>
-                          <span className="text-[9px] text-primary/80">
+                          <span className="text-[9px] font-bold text-primary uppercase tracking-widest">
                             In room
                           </span>
                         </div>
@@ -427,21 +428,21 @@ export default function RoomClient() {
                   );
                 })}
                 {participants.length === 0 && (
-                  <p className="text-xs text-slate-600">No participants</p>
+                  <p className="text-xs font-bold text-foreground/20 uppercase tracking-widest">No participants</p>
                 )}
               </div>
             </div>
 
             {/* Chat */}
             <div className="flex-1 flex flex-col min-h-0">
-              <div className="p-4 border-b border-primary/5 flex items-center justify-between">
-                <h3 className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
+              <div className="p-4 border-b border-border flex items-center justify-between">
+                <h3 className="text-[11px] font-black uppercase tracking-widest text-foreground/40">
                   Room Chat
                 </h3>
               </div>
               <div className="flex-1 overflow-auto p-4 flex flex-col gap-4 custom-scrollbar">
                 {messages.length === 0 && (
-                  <p className="text-xs text-slate-600 text-center mt-4">
+                  <p className="text-xs font-bold text-foreground/20 uppercase tracking-widest text-center mt-4">
                     No messages yet
                   </p>
                 )}
@@ -460,10 +461,10 @@ export default function RoomClient() {
                 })}
                 <div ref={chatEndRef} />
               </div>
-              <div className="p-4 bg-background-dark">
+              <div className="p-4 bg-background">
                 <div className="relative">
                   <input
-                    className="w-full bg-slate-800/50 border border-primary/20 rounded-lg py-2 pl-3 pr-10 text-xs focus:ring-1 focus:ring-primary focus:border-primary outline-none text-slate-100 placeholder:text-slate-600"
+                    className="w-full bg-card border border-border rounded-xl py-2.5 pl-3 pr-10 text-xs font-bold focus:ring-1 focus:ring-primary focus:border-primary outline-none text-foreground placeholder:text-foreground/20 shadow-inner"
                     placeholder="Type a message..."
                     type="text"
                     value={chatInput}
@@ -471,7 +472,7 @@ export default function RoomClient() {
                     onKeyDown={handleChatKeyDown}
                   />
                   <button
-                    className="absolute right-2 top-1.5 text-primary hover:text-primary/80 cursor-pointer"
+                    className="absolute right-3 top-2.5 text-primary hover:brightness-110 cursor-pointer transition-all"
                     aria-label="Send message"
                     onClick={handleSendMessage}
                   >
@@ -483,14 +484,13 @@ export default function RoomClient() {
           </aside>
         </main>
 
-        {/* Footer — informational only, no misleading interactions */}
-        <footer className="h-6 bg-primary/90 backdrop-blur-md flex items-center px-3 justify-between text-[10px] text-white font-medium select-none shadow-[0_-4px_12px_rgba(137,90,246,0.2)]">
+        <footer className="h-6 bg-primary flex items-center px-3 justify-between text-[10px] text-primary-foreground font-black uppercase tracking-widest select-none shadow-lg shadow-primary/20">
           <div className="flex items-center gap-4">
-            <div className="flex items-center gap-1 px-1">
+            <div className="flex items-center gap-1.5 px-1">
               <GitBranch className="w-3 h-3" />
               main
             </div>
-            <div className="flex items-center gap-1 px-1">
+            <div className="flex items-center gap-1.5 px-1">
               {participants.length} online
             </div>
           </div>
@@ -501,7 +501,6 @@ export default function RoomClient() {
         </footer>
       </div>
 
-      {/* Share Modal */}
       <Modal
         isOpen={showShareModal}
         onClose={() => setShowShareModal(false)}
@@ -510,7 +509,7 @@ export default function RoomClient() {
           <Button
             variant="ghost"
             size="md"
-            className="text-[11px] font-bold uppercase tracking-wider"
+            className="text-[11px] font-black uppercase tracking-widest text-foreground/60 hover:text-primary"
             onClick={() => setShowShareModal(false)}
             ariaLabel="Close share modal"
           >
@@ -519,31 +518,31 @@ export default function RoomClient() {
         }
       >
         {shareLoading && (
-          <div className="flex items-center justify-center py-4 gap-2 text-sm text-slate-400">
-            <Loader2 className="w-4 h-4 animate-spin" />
-            Generating invite link...
+          <div className="flex items-center justify-center py-4 gap-3 text-sm font-bold uppercase tracking-widest text-foreground/40">
+            <Loader2 className="w-4 h-4 animate-spin text-primary" />
+            Generating invite...
           </div>
         )}
         {!shareLoading && shareError && (
-          <div className="text-sm text-red-400 text-center py-4">
+          <div className="text-sm text-red-500 font-bold uppercase tracking-widest text-center py-4">
             {shareError}
           </div>
         )}
         {!shareLoading && shareLink && (
           <div className="space-y-4">
             <div className="flex flex-col gap-2">
-              <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+              <label className="text-[10px] font-black uppercase tracking-widest text-foreground/40">
                 Invite Link
               </label>
               <div className="flex gap-2">
                 <input
                   readOnly
                   value={shareLink}
-                  className="flex-1 bg-white/[0.03] border border-white/5 rounded-lg px-3 py-2 text-xs text-slate-300 outline-none truncate"
+                  className="flex-1 bg-background/50 border border-border rounded-xl px-3 py-2 text-xs font-bold text-foreground outline-none truncate shadow-inner"
                 />
                 <button
                   onClick={handleCopyLink}
-                  className="px-3 py-2 rounded-lg bg-primary/20 text-primary hover:bg-primary/30 transition-colors cursor-pointer flex items-center gap-1.5 text-xs font-medium"
+                  className="px-4 py-2 rounded-xl bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-all cursor-pointer flex items-center gap-2 text-xs font-black uppercase tracking-widest shadow-sm"
                 >
                   {shareCopied ? (
                     <>
@@ -560,7 +559,7 @@ export default function RoomClient() {
               </div>
             </div>
             {shareExpiry && (
-              <div className="flex items-center gap-1.5 text-[11px] text-slate-500">
+              <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-foreground/40">
                 <Clock className="w-3 h-3" />
                 Expires {formatDate(shareExpiry)}
               </div>
@@ -569,7 +568,6 @@ export default function RoomClient() {
         )}
       </Modal>
 
-      {/* Settings Modal */}
       <Modal
         isOpen={showSettingsModal}
         onClose={() => {
@@ -581,7 +579,7 @@ export default function RoomClient() {
           <Button
             variant="ghost"
             size="md"
-            className="text-[11px] font-bold uppercase tracking-wider"
+            className="text-[11px] font-black uppercase tracking-widest text-foreground/60 hover:text-primary"
             onClick={() => {
               setShowSettingsModal(false);
               setDeleteConfirm(false);
@@ -592,61 +590,61 @@ export default function RoomClient() {
           </Button>
         }
       >
-        <div className="space-y-4">
-          <div className="space-y-3">
-            <h4 className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
-              Room Info
+        <div className="space-y-6">
+          <div className="space-y-4">
+            <h4 className="text-[10px] font-black uppercase tracking-widest text-foreground/40 border-b border-border pb-2">
+              Room Properties
             </h4>
-            <div className="grid grid-cols-2 gap-3 text-xs">
-              <div>
-                <span className="text-slate-500 block mb-0.5">Name</span>
-                <span className="text-slate-200 font-medium">
+            <div className="grid grid-cols-2 gap-4 text-xs">
+              <div className="space-y-1">
+                <span className="text-foreground/30 block uppercase font-black tracking-widest text-[9px]">Name</span>
+                <span className="text-foreground font-black">
                   {roomMeta?.name || "—"}
                 </span>
               </div>
-              <div>
-                <span className="text-slate-500 block mb-0.5">Language</span>
-                <span className="text-slate-200 font-medium">
+              <div className="space-y-1">
+                <span className="text-foreground/30 block uppercase font-black tracking-widest text-[9px]">Language</span>
+                <span className="text-primary font-black uppercase">
                   {roomMeta?.language || "—"}
                 </span>
               </div>
-              <div>
-                <span className="text-slate-500 block mb-0.5">Created</span>
-                <span className="text-slate-200 font-medium">
+              <div className="space-y-1">
+                <span className="text-foreground/30 block uppercase font-black tracking-widest text-[9px]">Created</span>
+                <span className="text-foreground font-black">
                   {roomMeta?.createdAt ? formatDate(roomMeta.createdAt) : "—"}
                 </span>
               </div>
-              <div>
-                <span className="text-slate-500 block mb-0.5">Owner</span>
-                <span className="text-slate-200 font-medium">
+              <div className="space-y-1">
+                <span className="text-foreground/30 block uppercase font-black tracking-widest text-[9px]">Owner</span>
+                <span className="text-foreground font-black">
                   {roomMeta?.owner?.displayName || "—"}
                 </span>
               </div>
-              <div>
-                <span className="text-slate-500 block mb-0.5">Members</span>
-                <span className="text-slate-200 font-medium">
+              <div className="space-y-1">
+                <span className="text-foreground/30 block uppercase font-black tracking-widest text-[9px]">Members</span>
+                <span className="text-foreground font-black">
                   {roomMembers.length}
                 </span>
               </div>
-              <div>
-                <span className="text-slate-500 block mb-0.5">Visibility</span>
-                <span className="text-slate-200 font-medium">
+              <div className="space-y-1">
+                <span className="text-foreground/30 block uppercase font-black tracking-widest text-[9px]">Visibility</span>
+                <span className={`font-black uppercase ${roomMeta?.isPublic ? 'text-primary' : 'text-yellow-500'}`}>
                   {roomMeta?.isPublic ? "Public" : "Private"}
                 </span>
               </div>
             </div>
           </div>
 
-          <div className="border-t border-white/5 pt-4 space-y-3">
-            <h4 className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
-              Actions
+          <div className="space-y-4 pt-2">
+            <h4 className="text-[10px] font-black uppercase tracking-widest text-foreground/40 border-b border-border pb-2">
+              Danger Zone
             </h4>
 
             {!isOwner && (
               <Button
                 variant="ghost"
                 size="md"
-                className="w-full !justify-start text-slate-300 hover:text-white"
+                className="w-full !justify-start text-foreground hover:text-primary font-black uppercase tracking-widest text-[11px] border border-border hover:bg-primary/5"
                 onClick={handleLeaveRoom}
                 disabled={actionLoading}
                 ariaLabel="Leave room"
@@ -657,11 +655,11 @@ export default function RoomClient() {
             )}
 
             {isOwner && !deleteConfirm && (
-              <>
+              <div className="flex flex-col gap-3">
                 <Button
                   variant="ghost"
                   size="md"
-                  className="w-full !justify-start text-slate-300 hover:text-white"
+                  className="w-full !justify-start text-foreground hover:text-primary font-black uppercase tracking-widest text-[11px] border border-border hover:bg-primary/5"
                   onClick={handleLeaveRoom}
                   disabled={actionLoading}
                   ariaLabel="Leave room"
@@ -672,7 +670,7 @@ export default function RoomClient() {
                 <Button
                   variant="ghost"
                   size="md"
-                  className="w-full !justify-start text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                  className="w-full !justify-start text-red-500 hover:text-red-300 hover:bg-red-500/10 font-black uppercase tracking-widest text-[11px] border border-red-500/10"
                   onClick={() => setDeleteConfirm(true)}
                   disabled={actionLoading}
                   ariaLabel="Delete room"
@@ -680,20 +678,19 @@ export default function RoomClient() {
                   <Trash2 className="w-4 h-4" />
                   Delete Room
                 </Button>
-              </>
+              </div>
             )}
 
             {isOwner && deleteConfirm && (
-              <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 space-y-3">
-                <p className="text-xs text-red-400">
-                  This will permanently delete the room and all its data. This
-                  action cannot be undone.
+              <div className="bg-red-500/5 border border-red-500/20 rounded-xl p-4 space-y-4">
+                <p className="text-[11px] text-red-500 font-bold uppercase tracking-widest leading-relaxed">
+                  Permanently delete room and all data. This cannot be undone.
                 </p>
                 <div className="flex gap-2">
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="text-[11px]"
+                    className="text-[10px] font-black uppercase tracking-widest text-foreground"
                     onClick={() => setDeleteConfirm(false)}
                     ariaLabel="Cancel delete"
                   >
@@ -702,7 +699,7 @@ export default function RoomClient() {
                   <Button
                     variant="primary"
                     size="sm"
-                    className="!bg-red-500 hover:!bg-red-600 !shadow-none text-[11px]"
+                    className="!bg-red-500 !text-white hover:!bg-red-600 !shadow-none text-[10px] font-black uppercase tracking-widest"
                     onClick={handleDeleteRoom}
                     disabled={actionLoading}
                     ariaLabel="Confirm delete room"

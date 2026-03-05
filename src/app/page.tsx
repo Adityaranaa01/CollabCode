@@ -2,495 +2,402 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { Logo } from "@/components/Logo";
-import { Button } from "@/components/Button";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTheme } from "@/contexts/ThemeContext";
+import { Component as Globe } from "@/components/ui/interactive-globe";
+import { User, LogOut, Sun, Moon, Zap, Code, Users } from "lucide-react";
 
-function NavButtons() {
-  const { user, isAuthenticated, isLoading } = useAuth();
+// --- Components ---
 
-  if (isLoading) return null;
-
-  if (isAuthenticated && user) {
-    const initials = user.displayName
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
-
-    return (
-      <div className="flex gap-8 items-center">
-        <Link
-          href="/dashboard"
-          className="text-sm text-zinc-400 hover:text-white transition-colors"
-        >
-          Dashboard
-        </Link>
-        <Link
-          href="/profile"
-          className="group flex items-center gap-0 rounded-full bg-white/5 border border-white/10 hover:border-brand-purple/30 transition-all duration-300 overflow-hidden"
-        >
-          <span className="max-w-0 group-hover:max-w-[120px] overflow-hidden transition-all duration-300 ease-in-out whitespace-nowrap text-sm font-medium text-zinc-200 group-hover:pl-4 group-hover:pr-2">
-            {user.displayName.split(" ")[0]}
-          </span>
-          <span className="size-9 rounded-full bg-brand-purple/20 border border-brand-purple/30 flex items-center justify-center text-xs font-bold text-brand-purple shrink-0">
-            {initials}
-          </span>
-        </Link>
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex gap-8 items-center">
-      <Link
-        href="/auth?mode=signup"
-        className="text-sm text-zinc-400 hover:text-white transition-colors"
-      >
-        Sign Up
-      </Link>
-      <Link
-        href="/auth?mode=login"
-        className="px-5 py-2 rounded-full glass text-sm font-medium hover:bg-white/10 transition-all"
-      >
-        Log In
-      </Link>
-    </div>
-  );
-}
-
-export default function LandingPage() {
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
-  const [isHoveringEditor, setIsHoveringEditor] = useState(false);
-  const editorRef = useRef<HTMLDivElement>(null);
+const AnimatedNumber = ({ value, suffix = "", decimals = 0 }: { value: number; suffix?: string; decimals?: number }) => {
+  const [displayValue, setDisplayValue] = useState(0);
+  const ref = useRef<HTMLDivElement>(null);
+  const hasAnimated = useRef(false);
 
   useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      setMousePos({
-        x: (e.clientX / window.innerWidth - 0.5) * 20,
-        y: (e.clientY / window.innerHeight - 0.5) * 20,
-      });
-    };
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !hasAnimated.current) {
+          hasAnimated.current = true;
+          const end = value;
+          const duration = 2000;
+          const startTime = performance.now();
 
-    window.addEventListener("mousemove", handleMouseMove);
-    return () => window.removeEventListener("mousemove", handleMouseMove);
-  }, []);
-
-  const calculateTilt = () => {
-    if (!isHoveringEditor)
-      return { rotateX: -mousePos.y * 0.5, rotateY: mousePos.x * 0.5 };
-    return { rotateX: -mousePos.y * 1.5, rotateY: mousePos.x * 1.5 };
-  };
-
-  const tilt = calculateTilt();
+          const animate = (currentTime: number) => {
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            const easeProgress = 1 - Math.pow(1 - progress, 3);
+            const current = easeProgress * end;
+            setDisplayValue(current);
+            if (progress < 1) requestAnimationFrame(animate);
+          };
+          requestAnimationFrame(animate);
+        }
+      },
+      { threshold: 0.1 }
+    );
+    if (ref.current) observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, [value]);
 
   return (
-    <div className="relative min-h-screen bg-[#050505] text-white overflow-x-hidden">
-      {/* Cinematic Background Elements */}
-      <div className="fixed inset-0 z-0 pointer-events-none">
-        <div className="absolute inset-0 glow-gradient" />
+    <div ref={ref}>
+      {displayValue.toLocaleString(undefined, {
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals,
+      })}
+      {suffix}
+    </div>
+  );
+};
+
+const ThemeToggle = ({ isDark, onToggle }: { isDark: boolean; onToggle: () => void }) => {
+  return (
+    <button
+      onClick={(e) => {
+        e.preventDefault();
+        onToggle();
+      }}
+      className="relative w-12 h-6 rounded-full bg-muted border border-border transition-all duration-500 cursor-pointer overflow-hidden z-[110]"
+      aria-label="Toggle Theme"
+    >
+      <div 
+        className={`absolute top-1 left-1 size-4 rounded-full transition-all duration-500 flex items-center justify-center pointer-events-none
+          ${isDark ? 'translate-x-6 bg-primary text-primary-foreground' : 'translate-x-0 bg-primary text-primary-foreground'}`}
+      >
+        {isDark ? <Moon size={10} fill="currentColor" /> : <Sun size={10} fill="currentColor" />}
+      </div>
+    </button>
+  );
+};
+
+const NavButtons = ({ isDark, onToggle }: { isDark: boolean; onToggle: () => void }) => {
+  const { user, isAuthenticated, isLoading, logout } = useAuth();
+  const [showDropdown, setShowDropdown] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  if (isLoading) return <div className="h-10 w-32 bg-primary/5 animate-pulse rounded-full" />;
+
+  return (
+    <div className="flex gap-4 md:gap-6 items-center">
+      <ThemeToggle isDark={isDark} onToggle={onToggle} />
+      
+      {isAuthenticated && user ? (
+        <div className="relative" ref={dropdownRef}>
+          <button
+            onClick={() => setShowDropdown(!showDropdown)}
+            className="group flex items-center gap-0 rounded-full bg-card border border-border hover:border-primary/30 transition-all duration-300 overflow-hidden cursor-pointer"
+          >
+            <span className="max-w-0 group-hover:max-w-[120px] overflow-hidden transition-all duration-300 ease-in-out whitespace-nowrap text-sm font-medium text-foreground group-hover:pl-4 group-hover:pr-2">
+              {user.displayName.split(" ")[0]}
+            </span>
+            <span className="size-9 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary shrink-0">
+              {user.displayName.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2)}
+            </span>
+          </button>
+
+          {showDropdown && (
+            <div className="absolute right-0 mt-3 w-48 bg-popover border border-border rounded-xl shadow-xl overflow-hidden z-[150] animate-in fade-in zoom-in-95 duration-200">
+              <Link href="/profile" className="flex items-center gap-3 px-4 py-3 text-sm text-foreground/70 hover:text-primary hover:bg-primary/5 transition-all group">
+                <User className="w-4 h-4 opacity-40 group-hover:opacity-100" />
+                <span className="font-bold">Profile</span>
+              </Link>
+              <button
+                onClick={() => logout()}
+                className="w-full flex items-center gap-3 px-4 py-3 text-sm text-destructive hover:bg-destructive/5 transition-all group cursor-pointer border-t border-border"
+              >
+                <LogOut className="w-4 h-4 opacity-40 group-hover:opacity-100" />
+                <span className="font-bold">Sign Out</span>
+              </button>
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="flex gap-4 items-center">
+          <Link href="/auth?mode=login" className="text-sm font-medium text-foreground/70 hover:text-primary transition-colors">
+            Sign In
+          </Link>
+          <Link href="/auth?mode=signup" className="px-5 py-2 rounded-full bg-primary text-primary-foreground text-sm font-bold hover:opacity-90 transition-all shadow-lg">
+            Start Free
+          </Link>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const FeatureCard = ({ number, title, desc, icon: Icon, children, className = "" }: { number: string; title: string; desc: string; icon: any; children?: React.ReactNode; className?: string }) => (
+  <div className={`relative bg-card p-10 rounded-2xl border-t-[3px] border-t-primary/40 border-x border-b border-border group hover:-translate-y-1 transition-all duration-500 ${className}`}>
+    <div className="absolute top-4 left-4 text-8xl font-black opacity-[0.06] select-none pointer-events-none text-primary">
+      {number}
+    </div>
+    <div className="relative z-10 flex items-center gap-3 mb-4">
+      <Icon className="w-[18px] h-[18px] text-primary" />
+      <h3 className="text-xl font-bold text-foreground">{title}</h3>
+    </div>
+    <p className="relative z-10 text-foreground/70 leading-relaxed mb-6 font-medium">
+      {desc}
+    </p>
+    <div className="h-px w-full bg-border mb-6" />
+    <div className="relative z-10">
+      {children}
+    </div>
+    <div className="absolute bottom-2 right-2 size-1 rounded-full bg-primary/20" />
+  </div>
+);
+
+const StepCard = ({ number, title, desc, rotation }: { number: string; title: string; desc: string; rotation: string }) => (
+  <div 
+    className={`p-8 bg-background rounded-2xl border border-border transition-all duration-700 hover:rotate-0 hover:z-20 ${rotation}`}
+  >
+    <div className="inline-block px-3 py-1 rounded-full border border-primary text-[10px] font-mono font-bold text-primary mb-6">
+      STEP {number}
+    </div>
+    <h3 className="text-xl font-bold text-foreground mb-4">{title}</h3>
+    <p className="text-foreground/70 text-sm leading-relaxed">{desc}</p>
+  </div>
+);
+
+const StatCard = ({ label, value, suffix = "", decimals = 0, className = "" }: { label: string; value: number; suffix?: string; decimals?: number; className?: string }) => (
+  <div className={`relative p-10 bg-card rounded-2xl overflow-hidden shadow-inner group transition-all duration-500 ${className}`}>
+    <div className="text-7xl font-black tracking-tighter text-foreground mb-4">
+      <AnimatedNumber value={value} suffix={suffix} decimals={decimals} />
+    </div>
+    <div className="text-xs font-bold uppercase tracking-[0.2em] text-foreground/40 mb-6">
+      {label}
+    </div>
+    <div className="flex gap-1.5 h-6 items-end">
+      {[40, 70, 50, 90, 60, 80].map((h, i) => (
+        <div key={i} className="flex-1 rounded-t-sm bg-primary/20" style={{ height: `${h}%` }} />
+      ))}
+    </div>
+  </div>
+);
+
+// --- Main Page Component ---
+
+export default function LandingPage() {
+  const { isDark, toggleTheme } = useTheme();
+  const [scrolled, setScrolled] = useState(false);
+  const lineRef = useRef<SVGPathElement>(null);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+      if (lineRef.current) {
+        const scrollPercent = (window.scrollY - 1800) / 600; 
+        const draw = Math.max(0, Math.min(1, scrollPercent));
+        lineRef.current.style.strokeDashoffset = `${100 - draw * 100}%`;
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const tickerMessages = [
+    "Sarah just joined room 'engine-refactor'",
+    "New performance update deployed to production",
+    "Marcus created room 'frontend-auth-flow'",
+    "Live synchronization latency: 12ms",
+    "Active developers worldwide: 1,420",
+  ];
+
+  return (
+    <div className="relative min-h-screen bg-background text-foreground selection:bg-primary/20 transition-colors duration-500 overflow-x-hidden">
+      <style jsx global>{`
+        @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+        .animate-marquee { animation: marquee 30s linear infinite; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: hsl(var(--muted)); border-radius: 10px; }
+      `}</style>
+      
+      <div className="fixed inset-0 pointer-events-none z-[1] opacity-[0.4] bg-[radial-gradient(circle_at_2px_2px,rgba(var(--primary),0.05)_1px,transparent_0)] bg-[length:40px_40px]" />
+
+      {/* --- Live Activity Ticker --- */}
+      <div className="relative z-[100] h-10 bg-foreground text-background overflow-hidden flex items-center">
+        <div className="animate-marquee whitespace-nowrap flex gap-12 px-8">
+          {[...tickerMessages, ...tickerMessages].map((msg, i) => (
+            <div key={i} className="flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.2em] text-primary">
+               <div className="size-1 rounded-full bg-primary shadow-[0_0_8px_rgba(var(--primary),0.8)]" />
+               {msg}
+            </div>
+          ))}
+        </div>
       </div>
 
-      {/* Navigation */}
-      <nav className="fixed top-0 w-full z-40 px-6 py-8 flex justify-between items-center mix-blend-difference">
-        <div className="text-xl font-bold tracking-tighter">
-          COLLABCODE<span className="text-brand-purple">.</span>
-        </div>
-        <NavButtons />
-      </nav>
-
-      {/* Hero Section */}
-      <section className="relative pt-40 pb-20 px-6 min-h-screen flex flex-col items-center overflow-hidden">
-        <div
-          className="max-w-5xl mx-auto text-center z-10 animate-fade-up"
-          style={{
-            transform: `translate3d(${mousePos.x * -0.8}px, ${mousePos.y * -0.8}px, 0)`,
-            transition: "transform 0.15s ease-out",
-          }}
-        >
-          <h1 className="text-7xl md:text-9xl font-bold tracking-tight leading-[0.9] mb-8">
-            Code together <br />
-            <span className="text-zinc-500">without limits.</span>
-          </h1>
-          <p className="text-zinc-400 text-lg md:text-xl max-w-xl mx-auto mb-10">
-            The real-time collaborative workspace designed for high-performance
-            engineering teams.
-          </p>
-          <div className="flex gap-4 justify-center">
-            <Link href="/auth">
-              <div
-                className="transition-transform duration-200"
-                style={{
-                  transform: `translate3d(${mousePos.x * 0.2}px, ${mousePos.y * 0.2}px, 0)`,
-                }}
-              >
-                <Button
-                  variant="primary"
-                  size="lg"
-                  className="hover:scale-105 transition-transform"
-                >
-                  Get Started
-                </Button>
-              </div>
-            </Link>
+      {/* --- Navbar --- */}
+      <div className="fixed top-12 left-0 right-0 z-[100] px-6 transition-all duration-300">
+        <nav className={`mx-auto max-w-fit flex items-center gap-8 py-2.5 px-6 rounded-full border border-border backdrop-blur-xl transition-all duration-500
+          ${scrolled ? 'bg-background/80 shadow-lg scale-95' : 'bg-background/92'}`}>
+          <div className="flex items-center gap-2 pr-4 border-r border-border">
+            <div className="size-7 bg-primary rounded-md flex items-center justify-center font-black text-primary-foreground text-sm">C</div>
+            <span className="text-sm font-black tracking-tighter uppercase whitespace-nowrap">CollabCode</span>
           </div>
-        </div>
-
-        {/* 3D Perspective Editor Mockup */}
-        <div
-          ref={editorRef}
-          onMouseEnter={() => setIsHoveringEditor(true)}
-          onMouseLeave={() => setIsHoveringEditor(false)}
-          className="perspective-container mt-20 w-full max-w-6xl relative z-20 animate-fade-up"
-          style={{
-            animationDelay: "0.3s",
-            perspective: "2000px",
-          }}
-        >
-          <div className="animate-idle-float transform-gpu">
-            <div
-              className="glass rounded-xl shadow-2xl overflow-hidden border border-white/20 transform-gpu transition-transform duration-200 ease-out"
-              style={{
-                transform: `rotateX(${10 + tilt.rotateX}deg) rotateY(${-5 + tilt.rotateY}deg) translateZ(0)`,
-              }}
-            >
-              {/* Editor Header */}
-              <div className="flex items-center justify-between px-4 py-3 bg-white/5 border-b border-white/10">
-                <div className="flex gap-2">
-                  <div className="w-3 h-3 rounded-full bg-red-500/50" />
-                  <div className="w-3 h-3 rounded-full bg-yellow-500/50" />
-                  <div className="w-3 h-3 rounded-full bg-green-500/50" />
-                </div>
-                <div className="flex items-center gap-4">
-                  <span className="text-[10px] tracking-widest uppercase text-zinc-500">
-                    lib/engine/renderer.ts
-                  </span>
-                  <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-brand-purple/20 border border-brand-purple/30">
-                    <span className="w-1.5 h-1.5 rounded-full bg-brand-purple animate-pulse" />
-                    <span className="text-[10px] text-brand-purple font-bold tracking-wide">
-                      LIVE
-                    </span>
-                  </div>
-                </div>
-              </div>
-              {/* Editor Content */}
-              <div className="p-8 font-mono text-sm leading-relaxed flex">
-                <div className="text-zinc-600 pr-6 text-right select-none">
-                  1<br />2<br />3<br />4<br />5<br />6<br />7<br />8<br />9
-                  <br />
-                  10
-                  <br />
-                  11
-                </div>
-                <div className="relative w-full">
-                  <div className="text-zinc-300">
-                    <span className="text-purple-400">export const</span>{" "}
-                    <span className="text-blue-400">renderLoop</span> = () =&gt;
-                    &#123;
-                    <br />
-                    {"  "}
-                    <span className="text-zinc-500">
-                      {"// Initialize GPU interface"}
-                    </span>
-                    <br />
-                    {"  "}
-                    <span className="text-purple-400">const</span> pipeline ={" "}
-                    <span className="text-yellow-200">await</span>{" "}
-                    createPipeline();
-                    <br />
-                    <br />
-                    {"  "}
-                    <span className="text-purple-400">return</span> &#123;
-                    <br />
-                    {"    "}draw: (ctx) =&gt; &#123;
-                    <br />
-                    {"      "}
-                    <span className="relative">
-                      ctx.clearColor(0, 0, 0, 1);
-                      {/* Blue Cursor */}
-                      <span className="absolute -top-1 left-0 h-5 w-[2px] bg-blue-500 animate-blink">
-                        <span className="absolute -top-5 left-0 px-1.5 py-0.5 bg-blue-500 text-[10px] text-white rounded-sm font-sans whitespace-nowrap">
-                          Alex
-                        </span>
-                      </span>
-                    </span>
-                    <br />
-                    {"      "}pipeline.execute(ctx);
-                    <br />
-                    {"    "}&#125;
-                    <br />
-                    {"  "}&#125;
-                    <br />
-                    &#125;
-                  </div>
-
-                  {/* Purple Cursor */}
-                  <div className="absolute top-24 left-1/3 h-5 w-[2px] bg-brand-purple animate-blink">
-                    <span className="absolute -top-5 left-0 px-1.5 py-0.5 bg-brand-purple text-[10px] text-white rounded-sm font-sans whitespace-nowrap">
-                      Sarah
-                    </span>
-                  </div>
-
-                  {/* Chat Bubble Overlay */}
-                  <div className="absolute bottom-0 right-0 glass p-4 rounded-xl max-w-xs shadow-xl border border-white/20 -mr-10 -mb-4">
-                    <div className="flex items-start gap-3">
-                      <div className="w-8 h-8 rounded-full bg-brand-purple flex-shrink-0 flex items-center justify-center text-xs font-bold">
-                        S
-                      </div>
-                      <div>
-                        <p className="text-xs font-semibold mb-1">Sarah</p>
-                        <p className="text-xs text-zinc-400 leading-snug">
-                          The pipeline execution seems much faster with the new
-                          buffer approach. 🔥
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+          <div className="hidden md:flex gap-8 items-center text-xs font-bold uppercase tracking-widest text-foreground/60">
+             <a href="#features" className="hover:text-primary transition-colors">Features</a>
+             <a href="#how-it-works" className="hover:text-primary transition-colors">Process</a>
+             <a href="#stats" className="hover:text-primary transition-colors">Stats</a>
           </div>
-        </div>
-      </section>
+          <NavButtons isDark={isDark} onToggle={toggleTheme} />
+        </nav>
+      </div>
 
-      {/* Supported Languages Loop */}
-      <section className="w-full overflow-hidden relative py-20 bg-[#050505]">
-        <div className="absolute inset-y-0 left-0 w-48 bg-gradient-to-r from-[#050505] via-[#050505]/80 to-transparent z-10" />
-        <div className="absolute inset-y-0 right-0 w-48 bg-gradient-to-l from-[#050505] via-[#050505]/80 to-transparent z-10" />
-
-        <div className="flex animate-marquee whitespace-nowrap gap-8 w-max">
-          {[
-            "JavaScript",
-            "TypeScript",
-            "Python",
-            "Go",
-            "Rust",
-            "Java",
-            "C++",
-            "C#",
-            "PHP",
-            "Ruby",
-            "Kotlin",
-            "Swift",
-            "Bash",
-            "SQL",
-            "HTML",
-            "CSS",
-          ].map((lang) => (
-            <div
-              key={lang}
-              className="px-8 py-3 rounded-full border border-white/10 bg-white/5 text-zinc-400 text-sm font-medium hover:border-brand-purple/50 hover:text-white hover:bg-brand-purple/10 transition-all cursor-default"
-            >
-              {lang}
+      {/* --- Hero Section --- */}
+      <section className="relative z-10 pt-48 pb-32 px-12 min-h-screen flex flex-col items-center overflow-visible">
+        <div className="max-w-[1400px] w-full grid lg:grid-cols-2 gap-10 items-center">
+          <div className="z-10">
+            <div className="inline-flex items-center gap-3 px-4 py-1.5 rounded-full bg-primary/5 border border-primary/12 text-[10px] font-bold text-primary uppercase tracking-[0.25em] mb-10">
+              <span className="size-2 rounded-full bg-primary animate-pulse" />
+              Engineered for Speed
             </div>
-          ))}
-          {/* Duplicate for infinite loop */}
-          {[
-            "JavaScript",
-            "TypeScript",
-            "Python",
-            "Go",
-            "Rust",
-            "Java",
-            "C++",
-            "C#",
-            "PHP",
-            "Ruby",
-            "Kotlin",
-            "Swift",
-            "Bash",
-            "SQL",
-            "HTML",
-            "CSS",
-          ].map((lang) => (
-            <div
-              key={`${lang}-clone`}
-              className="px-8 py-3 rounded-full border border-white/10 bg-white/5 text-zinc-400 text-sm font-medium hover:border-brand-purple/50 hover:text-white hover:bg-brand-purple/10 transition-all cursor-default"
-            >
-              {lang}
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Detail Section */}
-      <section className="py-40 px-6 bg-brand-black relative">
-        <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-20 items-center">
-          <div>
-            <h2 className="text-5xl font-bold tracking-tight mb-8">
-              Built for the speed of thought.
-            </h2>
-            <p className="text-zinc-400 text-lg leading-relaxed mb-8">
-              CollabCode synchronizes state changes in under 12ms. It&apos;s not
-              just about typing together; it&apos;s about shared context, shared
-              terminal sessions, and shared triumph.
+            <h1 className="text-7xl md:text-[6.5rem] leading-[0.9] tracking-tight mb-12">
+              <span className="block font-normal text-foreground">Write code.</span>
+              <span className="block italic text-foreground/80">In sync.</span>
+              <span className="block font-black bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">Everywhere.</span>
+            </h1>
+            <p className="text-xl text-foreground/70 max-w-lg mb-12 leading-relaxed font-medium">
+              The professional real-time collaborative workspace for elite engineering teams. Zero latency, total synchronization.
             </p>
-            <ul className="space-y-4">
-              {[
-                "CRDT-powered synchronization",
-                "Zero-latency local prediction",
-                "End-to-end encrypted sessions",
-              ].map((item) => (
-                <li
-                  key={item}
-                  className="flex items-center gap-3 text-zinc-300"
-                >
-                  <span className="w-1.5 h-1.5 rounded-full bg-brand-purple" />
-                  {item}
-                </li>
-              ))}
-            </ul>
+            <div className="flex flex-wrap gap-5">
+              <Link href="/auth?mode=signup" className="px-10 py-5 rounded-2xl bg-primary text-primary-foreground font-black text-lg hover:translate-y-[-2px] hover:shadow-xl transition-all">
+                Start Coding Free
+              </Link>
+              <a href="#features" className="px-10 py-5 rounded-2xl bg-transparent border-2 border-primary/20 text-foreground font-bold hover:bg-primary/5 transition-all text-lg">
+                View Demo
+              </a>
+            </div>
           </div>
-
-          <div className="relative group">
-            <div className="absolute -inset-1 bg-gradient-to-r from-brand-purple/20 to-transparent blur-2xl opacity-50 group-hover:opacity-100 transition duration-1000" />
-            <div
-              className="relative glass rounded-2xl overflow-hidden aspect-square flex items-center justify-center transition-transform duration-500 ease-out"
-              style={{
-                transform: `perspective(1000px) rotateX(${mousePos.y * 0.1}deg) rotateY(${mousePos.x * -0.1}deg)`,
-              }}
-            >
-              <div className="w-full h-full p-12 bg-[#0a0a0a]/80">
-                <div className="space-y-4 font-mono text-sm">
-                  <div className="flex items-center gap-4 text-zinc-500 border-b border-white/10 pb-4 mb-8">
-                    <span className="text-brand-purple">➜</span>
-                    <span>sync_engine_v4.rs</span>
-                  </div>
-                  <div className="text-zinc-300 opacity-40">
-                    impl SyncEngine &#123;
-                  </div>
-                  <div className="text-zinc-300 pl-4">
-                    pub async fn broadcast(&amp;self, op: Operation) &#123;
-                  </div>
-                  <div className="text-brand-purple pl-8">
-                    let latency = self.calculate_delta();
-                  </div>
-                  <div className="text-zinc-300 pl-8">
-                    metrics::record(&quot;sync.delta&quot;, latency);
-                  </div>
-                  <div className="text-green-400 pl-8 bg-green-400/10 w-fit">
-                    self.peers.send(op).await?;
-                  </div>
-                  <div className="text-zinc-300 pl-4">&#125;</div>
-                  <div className="text-zinc-300 opacity-40">&#125;</div>
-                </div>
-                {/* Floating latency element */}
-                <div className="absolute bottom-12 right-12 glass p-4 rounded-lg border-brand-purple/30 border-2">
-                  <div className="text-[10px] uppercase tracking-tighter text-zinc-500 mb-1">
-                    Latency
-                  </div>
-                  <div className="text-2xl font-bold font-mono">1.2ms</div>
-                </div>
+          <div className="relative flex justify-center perspective-[2000px]">
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-[600px] bg-primary/10 blur-[120px] rounded-full" />
+            <div className="relative z-10 w-full max-w-[600px]">
+              <Globe
+                size={600}
+                dotColor={isDark ? "rgba(168, 85, 247, ALPHA)" : "rgba(124, 58, 237, ALPHA)"}
+                arcColor={isDark ? "rgba(168, 85, 247, 0.4)" : "rgba(124, 58, 237, 0.4)"}
+                markerColor={isDark ? "#c084fc" : "#7c3aed"}
+                className="opacity-90 transition-all duration-1000"
+              />
+              <div className="absolute bottom-1/4 -left-20 p-6 bg-card rounded-2xl border border-border shadow-2xl animate-bounce duration-[3s] z-[50]">
+                <div className="text-[10px] font-bold text-foreground/40 uppercase tracking-widest mb-1">Global Latency</div>
+                <div className="text-3xl font-black text-primary">12.4ms</div>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Minimal Statement */}
-      <section className="py-60 px-6 bg-zinc-950/50">
-        <div className="max-w-4xl mx-auto text-center">
-          <h3 className="text-4xl md:text-6xl font-light tracking-tight text-white/90 leading-tight">
-            &quot;The most intentional way for <br />
-            <span className="font-bold text-white italic">teams</span> to write
-            code.&quot;
-          </h3>
+      {/* --- Features Section --- */}
+      <section id="features" className="relative z-10 py-32 px-12">
+        <div className="max-w-[1400px] mx-auto">
+          <div className="mb-24">
+            <h2 className="text-5xl font-black tracking-tight mb-6">Powerful from the <span className="text-primary">ground up.</span></h2>
+            <p className="text-foreground/60 font-medium text-lg max-w-md">Engineered for performance, designed for collaboration at scale.</p>
+          </div>
+          <div className="grid md:grid-cols-3 gap-8 items-start">
+            <FeatureCard number="01" title="Real-time Sync" desc="CRDT-based synchronization ensures every keystroke is propagated in under 15ms with zero conflicts." icon={Zap}>
+              <div className="flex items-center gap-3"><div className="size-2 rounded-full bg-green-500 animate-pulse" /><span className="text-[10px] font-bold uppercase tracking-widest text-green-600">Low Latency Active</span></div>
+            </FeatureCard>
+            <FeatureCard number="02" title="Monaco Core" desc="The same engine powering VS Code. Full IntelliSense, syntax highlighting, and multi-language support out of the box." icon={Code} className="md:mt-10">
+              <div className="flex gap-2 flex-wrap">{["TypeScript", "Go", "Rust", "Swift"].map(l => (<span key={l} className="text-[10px] font-bold px-2 py-1 rounded bg-primary/5 text-primary border border-primary/10">{l}</span>))}</div>
+            </FeatureCard>
+            <FeatureCard number="03" title="Team Presence" desc="See who's active, what they're highlighting, and where they're typing in real-time with cursor tracking." icon={Users}>
+              <div className="flex -space-x-2">{[1,2,3,4].map(i => (<div key={i} className="size-8 rounded-full border-2 border-card bg-muted flex items-center justify-center text-[10px] font-bold text-primary">{String.fromCharCode(64 + i)}</div>))}<div className="size-8 rounded-full border-2 border-card bg-primary flex items-center justify-center text-[10px] font-bold text-primary-foreground">+2</div></div>
+            </FeatureCard>
+          </div>
         </div>
       </section>
 
-      {/* Asymmetrical Feature: Terminal */}
-      <section className="py-40 px-6">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row gap-20">
-          <div className="md:w-1/3 pt-20">
-            <div className="sticky top-40">
-              <span className="text-brand-purple text-xs font-bold tracking-[0.2em] uppercase mb-4 block">
-                Perspective
-              </span>
-              <h2 className="text-4xl font-bold mb-6">
-                Unified terminal control.
-              </h2>
-              <p className="text-zinc-400 leading-relaxed">
-                Stop sharing screens to debug the server. Spin up shared,
-                ephemeral terminal sessions where every keystroke is reflected
-                for everyone.
-              </p>
-            </div>
+      {/* --- How It Works --- */}
+      <section id="how-it-works" className="relative z-10 py-32 bg-card/30">
+        <div className="max-w-screen-2xl mx-auto px-12">
+          <div className="text-center mb-32">
+            <h2 className="text-5xl font-black tracking-tight mb-6">Editorial workflow.</h2>
+            <p className="text-foreground/60 font-medium text-lg">Simplified for complex engineering teams.</p>
           </div>
-          <div className="md:w-2/3">
-            <div
-              className="glass h-[600px] rounded-3xl relative overflow-hidden group transition-transform duration-500 ease-out"
-              style={{
-                transform: `perspective(1000px) rotateX(${mousePos.y * 0.15}deg) rotateY(${mousePos.x * -0.15}deg)`,
-              }}
-            >
-              {/* Terminal Simulation */}
-              <div className="absolute inset-0 p-8 font-mono text-sm">
-                <div className="text-green-500 mb-2">
-                  collabcode@cloud-runtime:~${" "}
-                  <span className="text-white">npm run dev</span>
-                </div>
-                <div className="text-zinc-500">
-                  &gt; core-engine@1.0.0 dev
-                  <br />
-                  &gt; next dev
-                  <br />
-                  <br />
-                  <span className="text-blue-400 italic">ready</span> - started
-                  server on 0.0.0.0:3000, url: http://localhost:3000
-                  <br />
-                  <span className="text-yellow-400 italic">event</span> -
-                  compiled client and server successfully in 1245 ms (169
-                  modules)
-                </div>
-              </div>
-              {/* Gradient Overlay */}
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-gradient-to-br from-brand-purple/10 to-transparent rounded-full blur-3xl group-hover:scale-110 transition-transform duration-1000" />
-              <div className="absolute bottom-0 right-0 p-12">
-                <div className="text-8xl font-black text-white/5 select-none">
-                  TERMINAL
-                </div>
-              </div>
+          <div className="relative max-w-5xl mx-auto">
+            <div className="absolute top-1/2 left-0 w-full -translate-y-1/2 pointer-events-none hidden lg:block overflow-visible">
+              <svg width="100%" height="20" className="overflow-visible">
+                <path ref={lineRef} d="M 0 10 L 1000 10" stroke="currentColor" className="text-primary transition-all duration-300 opacity-20" strokeWidth="2" fill="none" strokeDasharray="8 8" strokeDashoffset="100" />
+              </svg>
+            </div>
+            <div className="grid lg:grid-cols-3 gap-12 lg:gap-8 relative z-10">
+              <StepCard number="01" title="Create a Room" desc="Launch a secure, encrypted workspace in one click. Deploy on our edge or self-host." rotation="-rotate-1" />
+              <StepCard number="02" title="Invite Peers" desc="Share a magic link with your team. Zero friction onboarding via instant magic links." rotation="rotate-0" />
+              <StepCard number="03" title="Build Together" desc="Ship features faster with shared context and real-time multiplayer code interaction." rotation="rotate-1" />
             </div>
           </div>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="py-20 px-6 border-t border-white/5 bg-[#050505]">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-10">
-          <div className="text-xl font-bold tracking-tighter">
-            COLLABCODE<span className="text-brand-purple">.</span>
+      {/* --- Stats Section --- */}
+      <section id="stats" className="relative z-10 py-32 px-12">
+        <div className="max-w-[1400px] mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 w-full">
+            <StatCard label="Active Developers" value={12000} suffix="+" className="lg:col-span-8" />
+            <StatCard label="Sync Latency" value={12} suffix="ms" className="lg:col-span-4" />
+            <StatCard label="Lines Shipped" value={850} suffix="k" className="lg:col-span-4" />
+            <StatCard label="Uptime Reliability" value={99.9} suffix="%" decimals={1} className="lg:col-span-8 p-16" />
           </div>
-          <div className="flex gap-12 text-zinc-500 text-sm font-medium">
-            <a
-              href="https://github.com/Adityaranaa01"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-brand-purple transition-all duration-300"
-            >
-              GitHub
-            </a>
-            <a
-              href="https://x.com/AdityaRaNaa01"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-brand-purple transition-all duration-300"
-            >
-              Twitter
-            </a>
-            <a
-              href="https://www.linkedin.com/in/aditya-piyush-36b7a0260/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-brand-purple transition-all duration-300"
-            >
-              LinkedIn
-            </a>
+        </div>
+      </section>
+
+      {/* --- CTA Banner --- */}
+      <section className="relative z-10 py-32 px-12">
+        <div className="max-w-[1400px] mx-auto rounded-3xl bg-foreground text-background p-16 md:p-32 text-center relative overflow-hidden group border border-primary/20">
+          <div className="absolute top-0 right-0 size-96 bg-primary/20 blur-[120px] rounded-full translate-x-1/3 -translate-y-1/3" />
+          <div className="absolute bottom-0 left-0 size-64 bg-accent/20 blur-[100px] rounded-full -translate-x-1/3 translate-y-1/3" />
+          <div className="relative z-10">
+            <h2 className="text-5xl md:text-8xl font-black text-background tracking-tighter mb-12 leading-[0.9]">Ready to ship<br />faster than ever?</h2>
+            <p className="text-background/60 text-xl font-bold mb-16 max-w-xl mx-auto">Join thousands of engineers building the future of software, together.</p>
+            <Link href="/auth?mode=signup" className="inline-block px-14 py-6 rounded-2xl bg-primary text-primary-foreground font-black text-xl hover:scale-105 transition-all shadow-2xl">Get Started Free</Link>
           </div>
-          <div className="text-zinc-600 text-[10px] uppercase tracking-[0.2em] font-bold">
-            © 2026 CollabCode Inc.
+        </div>
+      </section>
+
+      {/* --- Footer --- */}
+      <footer className="relative z-10 pt-32 pb-16 px-12 border-t border-border">
+        <div className="max-w-[1400px] mx-auto">
+          <div className="grid md:grid-cols-4 gap-20 mb-32">
+            <div className="col-span-2">
+              <div className="flex items-center gap-2 mb-8">
+                <div className="size-8 bg-primary rounded-lg flex items-center justify-center font-black text-primary-foreground text-xl">C</div>
+                <span className="text-xl font-black tracking-tighter uppercase whitespace-nowrap">CollabCode</span>
+              </div>
+              <p className="text-foreground/60 font-medium max-w-xs mb-10 leading-relaxed">The high-performance collaborative workspace for engineering teams. Built for speed, security, and scale.</p>
+              <div className="text-[10px] font-black text-primary tracking-[0.3em] uppercase">Built for engineers, by engineers.</div>
+            </div>
+            <div>
+              <h4 className="font-black text-xs uppercase tracking-[0.2em] mb-10 text-foreground">Product</h4>
+              <ul className="space-y-6 text-sm font-bold text-foreground/60">
+                <li><Link href="/dashboard" className="hover:text-primary transition-colors">Dashboard</Link></li>
+                <li><a href="#features" className="hover:text-primary transition-colors">Features</a></li>
+                <li><a href="#how-it-works" className="hover:text-primary transition-colors">Process</a></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-black text-xs uppercase tracking-[0.2em] mb-10 text-foreground">Legal</h4>
+              <ul className="space-y-6 text-sm font-bold text-foreground/60">
+                <li><Link href="/privacy" className="hover:text-primary transition-colors">Privacy Policy</Link></li>
+                <li><Link href="/terms" className="hover:text-primary transition-colors">Terms of Service</Link></li>
+                <li><a href="mailto:support@collabcode.io" className="hover:text-primary transition-colors">Support</a></li>
+              </ul>
+            </div>
+          </div>
+          <div className="flex flex-col md:flex-row justify-between items-center pt-8 border-t border-border gap-6">
+            <div className="text-[10px] font-bold text-foreground/40 uppercase tracking-[0.3em]">© 2026 CollabCode Inc. Distributed by Human Intelligence.</div>
+            <div className="flex gap-10">{["github", "twitter", "linkedin"].map(social => (<a key={social} href="#" className="text-foreground/40 hover:text-primary transition-colors uppercase text-[10px] font-black tracking-widest">{social}</a>))}</div>
           </div>
         </div>
       </footer>

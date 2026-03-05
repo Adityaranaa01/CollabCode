@@ -30,81 +30,84 @@ export const RoomCard: React.FC<RoomCardProps> = ({
     <Link
       href={href}
       className={`
-        group block surface-premium p-6
-        surface-premium-hover hover:-translate-y-1 transition-all duration-300
-        cursor-pointer relative overflow-hidden rounded-2xl
+        group block bg-card p-8
+        border border-border hover:border-primary/30 hover:-translate-y-1.5 transition-all duration-500
+        cursor-pointer relative overflow-hidden rounded-3xl shadow-2xl hover:shadow-[0_20px_50px_rgba(0,0,0,0.3)]
         ${className}
       `}
     >
       {/* Dynamic Background Glow */}
       <div
-        className={`absolute -right-4 -top-4 w-24 h-24 blur-3xl opacity-20 group-hover:opacity-40 transition-opacity rounded-full ${gradient}`}
+        className={`absolute -right-8 -top-8 w-32 h-32 blur-3xl opacity-10 group-hover:opacity-30 transition-opacity rounded-full ${gradient}`}
       />
 
       <div className="flex items-start justify-between relative z-10">
-        <div className="flex flex-col gap-1.5">
+        <div className="flex flex-col gap-2">
           <h3
-            className={`text-lg font-bold tracking-tight transition-colors duration-300 ${
+            className={`text-xl font-black tracking-tight transition-colors duration-300 ${
               isIdle
-                ? "text-slate-400 group-hover:text-slate-200"
-                : "text-slate-100"
+                ? "text-foreground/40 group-hover:text-foreground"
+                : "text-foreground"
             }`}
           >
             {name}
           </h3>
-          <div className="flex items-center gap-3">
-            <LanguageTag language={language} isActive={!isIdle} />
+          <div className="flex items-center gap-4">
+            <LanguageTag
+              language={language}
+              isActive={!isIdle}
+              className="bg-primary/5 border-primary/10 text-primary"
+            />
             {isPrivate && (
-              <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-white/5 border border-white/10">
-                <div className="w-1 h-1 rounded-full bg-slate-400" />
-                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">
+              <div className="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-primary/5 border border-primary/10">
+                <div className="w-1 h-1 rounded-full bg-yellow-500 animate-pulse" />
+                <span className="text-[9px] font-black text-yellow-500/80 uppercase tracking-[0.2em]">
                   Private
                 </span>
               </div>
             )}
-            <div className="flex items-center gap-1.5">
-              <span className="w-1 h-1 rounded-full bg-slate-600" />
-              <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">
-                {onlineCount}{" "}
-                {onlineCount === 1 ? "Collaborator" : "Collaborators"}
+            <div className="flex items-center gap-2">
+              <span className="w-1 h-1 rounded-full bg-[#5eead4]/20" />
+              <span className="text-[10px] text-[#5eead4]/30 font-black uppercase tracking-widest">
+                {onlineCount} {onlineCount === 1 ? "Peer" : "Peers"}
               </span>
             </div>
           </div>
         </div>
-        <div className="transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3">
+        <div className="transition-all duration-500 group-hover:scale-110 group-hover:rotate-6">
           <StatusBadge status={status} />
         </div>
       </div>
 
-      <div className="flex items-center justify-between mt-10 relative z-10">
-        <div className="flex -space-x-2.5">
+      <div className="flex items-center justify-between mt-12 relative z-10">
+        <div className="flex -space-x-3 items-center">
           {[1, 2, 3].map((i) => (
             <div
               key={i}
-              className="size-7 rounded-full border-2 border-[#0d0a14] bg-slate-800 flex items-center justify-center text-[9px] font-bold text-slate-300 shadow-xl transition-transform group-hover:translate-x-0.5"
+              className="size-8 rounded-full border-2 border-card bg-background flex items-center justify-center text-[10px] font-black text-primary shadow-xl transition-transform group-hover:translate-x-1 border-primary/10"
               style={{ transitionDelay: `${i * 50}ms` }}
             >
               {String.fromCharCode(64 + i)}
             </div>
           ))}
           {onlineCount > 3 && (
-            <div className="size-7 rounded-full border-2 border-[#0d0a14] bg-primary/20 text-primary flex items-center justify-center text-[9px] font-bold shadow-xl">
+            <div className="size-8 rounded-full border-2 border-card bg-primary/10 text-primary flex items-center justify-center text-[10px] font-black shadow-xl border-primary/20">
               +{onlineCount - 3}
             </div>
           )}
         </div>
 
-        <div className="flex items-center gap-2 overflow-hidden">
-          <span className="text-[10px] font-bold text-primary opacity-0 translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300 uppercase tracking-widest">
-            Join Space
+        <div className="flex items-center gap-3 overflow-hidden">
+          <span className="text-[10px] font-black text-primary opacity-0 translate-x-6 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-500 uppercase tracking-[0.2em]">
+            Enter Workspace
           </span>
-          <div className="size-8 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary transition-all duration-300 group-hover:bg-primary group-hover:text-white group-hover:shadow-[0_0_15px_rgba(137,90,246,0.5)]">
+          <div className="size-10 rounded-2xl bg-primary/5 border border-primary/20 flex items-center justify-center text-primary transition-all duration-500 group-hover:bg-primary group-hover:text-primary-foreground group-hover:shadow-[0_0_20px_rgba(var(--primary),0.4)] group-hover:rotate-[-10deg]">
             <svg
-              className="w-4 h-4"
+              className="w-5 h-5"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
-              strokeWidth="3"
+              strokeWidth="3.5"
               strokeLinecap="round"
               strokeLinejoin="round"
             >

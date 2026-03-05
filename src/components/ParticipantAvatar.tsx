@@ -2,38 +2,43 @@ import React from "react";
 
 interface ParticipantAvatarProps {
   initials: string;
-  color?: "purple" | "orange" | "blue" | "emerald";
+  color?: "teal" | "cyan" | "emerald" | "sky" | "purple";
   status?: "online" | "offline" | "away";
   size?: "sm" | "md";
   className?: string;
 }
 
 const colorMap = {
-  purple: {
-    bg: "bg-primary/30",
-    border: "border-primary/40",
-    text: "text-purple-200",
+  teal: {
+    bg: "bg-primary/10",
+    border: "border-primary/20",
+    text: "text-primary",
   },
-  orange: {
-    bg: "bg-orange-500/20",
-    border: "border-orange-500/40",
-    text: "text-orange-400",
-  },
-  blue: {
-    bg: "bg-blue-500/20",
-    border: "border-blue-500/40",
-    text: "text-blue-400",
+  cyan: {
+    bg: "bg-accent/10",
+    border: "border-accent/20",
+    text: "text-accent",
   },
   emerald: {
-    bg: "bg-emerald-500/20",
-    border: "border-emerald-500/40",
+    bg: "bg-emerald-500/10",
+    border: "border-emerald-500/20",
     text: "text-emerald-400",
+  },
+  sky: {
+    bg: "bg-sky-500/10",
+    border: "border-sky-500/20",
+    text: "text-sky-400",
+  },
+  purple: {
+    bg: "bg-purple-500/10",
+    border: "border-purple-500/20",
+    text: "text-purple-400",
   },
 };
 
 const statusDotMap = {
-  online: "bg-emerald-500",
-  offline: "bg-slate-600",
+  online: "bg-primary",
+  offline: "bg-foreground/20",
   away: "bg-yellow-500",
 };
 
@@ -44,20 +49,21 @@ const sizeMap = {
 
 export const ParticipantAvatar: React.FC<ParticipantAvatarProps> = ({
   initials,
-  color = "purple",
+  color = "teal",
   status = "online",
   size = "sm",
   className = "",
 }) => {
-  const c = colorMap[color];
+  const c = colorMap[color as keyof typeof colorMap] || colorMap.teal;
 
   return (
     <div className={`relative ${className}`}>
       <div
         className={`
-          ${sizeMap[size]} rounded-full ${c.bg}
+          ${sizeMap[size as keyof typeof sizeMap]} rounded-full ${c.bg}
           flex items-center justify-center
-          font-bold border ${c.border} ${c.text}
+          font-black border ${c.border} ${c.text}
+          shadow-lg
         `}
       >
         {initials}
@@ -66,8 +72,9 @@ export const ParticipantAvatar: React.FC<ParticipantAvatarProps> = ({
         <span
           className={`
             absolute -bottom-0.5 -right-0.5
-            w-2.5 h-2.5 ${statusDotMap[status]}
-            border-2 border-[#0d0a16] rounded-full
+            w-2.5 h-2.5 ${statusDotMap[status as keyof typeof statusDotMap]}
+            border-2 border-card rounded-full
+            shadow-lg
           `}
         />
       )}

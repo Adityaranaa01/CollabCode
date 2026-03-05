@@ -37,21 +37,21 @@ export const Modal: React.FC<ModalProps> = ({
     >
       <div
         className={`
-          w-full max-w-md bg-[#0d0a14]
-          border border-white/[0.08] rounded-3xl
-          shadow-[0_30px_60px_-12px_rgba(0,0,0,0.8)] overflow-hidden backdrop-blur-3xl
+          w-full max-w-md bg-card
+          border border-border rounded-3xl
+          shadow-2xl overflow-hidden backdrop-blur-3xl
           transform transition-all duration-300
           animate-in zoom-in-95 fade-in duration-300
           ${className}
         `}
       >
         <div className="px-8 pt-8 pb-4 flex items-center justify-between">
-          <h3 className="text-xl font-black text-white tracking-tight">
+          <h3 className="text-xl font-black text-foreground tracking-tight">
             {title}
           </h3>
           <button
             onClick={onClose}
-            className="size-8 flex items-center justify-center rounded-full bg-white/[0.03] text-slate-500 hover:text-white hover:bg-white/[0.1] transition-all cursor-pointer"
+            className="size-8 flex items-center justify-center rounded-full bg-foreground/5 text-foreground/40 hover:text-primary hover:bg-primary/10 transition-all cursor-pointer"
             aria-label="Close modal"
           >
             <X className="w-4 h-4" />
@@ -59,7 +59,7 @@ export const Modal: React.FC<ModalProps> = ({
         </div>
         <div className="px-8 py-6 space-y-6">{children}</div>
         {footer && (
-          <div className="px-8 py-6 bg-white/[0.02] flex gap-4 justify-end border-t border-white/[0.04]">
+          <div className="px-8 py-6 bg-foreground/[0.02] flex gap-4 justify-end border-t border-border">
             {footer}
           </div>
         )}

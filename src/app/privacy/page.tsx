@@ -2,36 +2,36 @@ import Link from "next/link";
 
 export default function PrivacyPage() {
   return (
-    <div className="min-h-screen bg-[#050505] text-zinc-300 font-sans selection:bg-brand-purple/30">
+    <div className="min-h-screen bg-background text-foreground/80 font-sans selection:bg-primary/30">
       {/* Navigation */}
-      <nav className="fixed top-0 w-full z-40 px-6 py-8 flex justify-between items-center bg-[#050505]/80 backdrop-blur-md border-b border-white/5">
-        <Link href="/" className="text-xl font-bold tracking-tighter text-white">
-          COLLABCODE<span className="text-brand-purple">.</span>
+      <nav className="fixed top-0 w-full z-40 px-6 py-8 flex justify-between items-center bg-background/80 backdrop-blur-md border-b border-border">
+        <Link href="/" className="text-xl font-bold tracking-tighter text-foreground uppercase">
+          COLLABCODE<span className="text-primary">.</span>
         </Link>
         <Link
           href="/auth?mode=login"
-          className="px-5 py-2 rounded-full glass text-sm font-medium hover:bg-white/10 transition-all text-white"
+          className="px-5 py-2 rounded-full bg-primary/10 text-primary border border-primary/20 text-sm font-medium hover:bg-primary/20 transition-all"
         >
           Log In
         </Link>
       </nav>
 
       <main className="max-w-4xl mx-auto pt-40 pb-20 px-6">
-        <h1 className="text-4xl md:text-5xl font-bold text-white mb-4 tracking-tight">
+        <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4 tracking-tight">
           Privacy Policy
         </h1>
-        <p className="text-zinc-500 mb-12">Last updated: March 02, 2026</p>
+        <p className="text-foreground/40 mb-12 font-medium uppercase tracking-widest text-[10px]">Last updated: March 02, 2026</p>
 
         <div className="space-y-12">
           <section>
-            <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-3">
-              <span className="w-1.5 h-6 bg-brand-purple rounded-full" />
+            <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-3">
+              <span className="w-1.5 h-6 bg-primary rounded-full" />
               1. Information We Collect
             </h2>
             <p className="leading-relaxed mb-4">
               We collect information you provide directly to us when you create an account, update your profile, use the Service, or communicate with us.
             </p>
-            <ul className="list-disc pl-6 space-y-2 text-zinc-400">
+            <ul className="list-disc pl-6 space-y-2 text-foreground/60">
               <li>Registration information: email, password, display name.</li>
               <li>Content: code snippets, chat messages, and room data.</li>
               <li>Subscription data: payment details and billing information.</li>
@@ -39,14 +39,14 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-3">
-              <span className="w-1.5 h-6 bg-brand-purple rounded-full" />
+            <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-3">
+              <span className="w-1.5 h-6 bg-primary rounded-full" />
               2. Use of Information
             </h2>
             <p className="leading-relaxed mb-4">
               We use the information we collect to:
             </p>
-            <ul className="list-disc pl-6 space-y-2 text-zinc-400">
+            <ul className="list-disc pl-6 space-y-2 text-foreground/60">
               <li>Provide, maintain, and improve our Service.</li>
               <li>Process transactions and send related information.</li>
               <li>Send technical notices, updates, security alerts, and support messages.</li>
@@ -55,8 +55,8 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-3">
-              <span className="w-1.5 h-6 bg-brand-purple rounded-full" />
+            <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-3">
+              <span className="w-1.5 h-6 bg-primary rounded-full" />
               3. Cookies
             </h2>
             <p className="leading-relaxed">
@@ -65,8 +65,8 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-3">
-              <span className="w-1.5 h-6 bg-brand-purple rounded-full" />
+            <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-3">
+              <span className="w-1.5 h-6 bg-primary rounded-full" />
               4. Data Security
             </h2>
             <p className="leading-relaxed">
@@ -75,8 +75,8 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-3">
-              <span className="w-1.5 h-6 bg-brand-purple rounded-full" />
+            <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-3">
+              <span className="w-1.5 h-6 bg-primary rounded-full" />
               5. Third-Party Services
             </h2>
             <p className="leading-relaxed">
@@ -85,8 +85,8 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-3">
-              <span className="w-1.5 h-6 bg-brand-purple rounded-full" />
+            <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-3">
+              <span className="w-1.5 h-6 bg-primary rounded-full" />
               6. Your Rights
             </h2>
             <p className="leading-relaxed">
@@ -95,8 +95,8 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-3">
-              <span className="w-1.5 h-6 bg-brand-purple rounded-full" />
+            <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-3">
+              <span className="w-1.5 h-6 bg-primary rounded-full" />
               7. Contact Us
             </h2>
             <p className="leading-relaxed">
@@ -107,17 +107,17 @@ export default function PrivacyPage() {
       </main>
 
       {/* Footer */}
-      <footer className="py-20 px-6 border-t border-white/5 bg-[#050505]">
+      <footer className="py-20 px-6 border-t border-border bg-card">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-10">
-          <div className="text-xl font-bold tracking-tighter text-white">
-            COLLABCODE<span className="text-brand-purple">.</span>
+          <div className="text-xl font-bold tracking-tighter text-foreground uppercase">
+            COLLABCODE<span className="text-primary">.</span>
           </div>
-          <div className="flex gap-12 text-zinc-500 text-sm font-medium">
-            <Link href="/" className="hover:text-brand-purple transition-all duration-300">Home</Link>
-            <Link href="/terms" className="hover:text-brand-purple transition-all duration-300">Terms</Link>
-            <Link href="/auth?mode=signup" className="hover:text-brand-purple transition-all duration-300">Sign Up</Link>
+          <div className="flex gap-12 text-foreground/40 text-sm font-medium uppercase tracking-widest text-[10px]">
+            <Link href="/" className="hover:text-primary transition-all duration-300">Home</Link>
+            <Link href="/terms" className="hover:text-primary transition-all duration-300">Terms</Link>
+            <Link href="/auth?mode=signup" className="hover:text-primary transition-all duration-300">Sign Up</Link>
           </div>
-          <div className="text-zinc-600 text-[10px] uppercase tracking-[0.2em] font-bold">
+          <div className="text-foreground/20 text-[10px] uppercase tracking-[0.2em] font-bold">
             © 2026 CollabCode Inc.
           </div>
         </div>

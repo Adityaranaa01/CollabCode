@@ -2,30 +2,30 @@ import Link from "next/link";
 
 export default function TermsPage() {
   return (
-    <div className="min-h-screen bg-[#050505] text-zinc-300 font-sans selection:bg-brand-purple/30">
+    <div className="min-h-screen bg-background text-foreground/80 font-sans selection:bg-primary/30">
       {/* Navigation */}
-      <nav className="fixed top-0 w-full z-40 px-6 py-8 flex justify-between items-center bg-[#050505]/80 backdrop-blur-md border-b border-white/5">
-        <Link href="/" className="text-xl font-bold tracking-tighter text-white">
-          COLLABCODE<span className="text-brand-purple">.</span>
+      <nav className="fixed top-0 w-full z-40 px-6 py-8 flex justify-between items-center bg-background/80 backdrop-blur-md border-b border-border">
+        <Link href="/" className="text-xl font-bold tracking-tighter text-foreground uppercase">
+          COLLABCODE<span className="text-primary">.</span>
         </Link>
         <Link
           href="/auth?mode=login"
-          className="px-5 py-2 rounded-full glass text-sm font-medium hover:bg-white/10 transition-all text-white"
+          className="px-5 py-2 rounded-full bg-primary/10 text-primary border border-primary/20 text-sm font-medium hover:bg-primary/20 transition-all"
         >
           Log In
         </Link>
       </nav>
 
       <main className="max-w-4xl mx-auto pt-40 pb-20 px-6">
-        <h1 className="text-4xl md:text-5xl font-bold text-white mb-4 tracking-tight">
+        <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4 tracking-tight">
           Terms of Service
         </h1>
-        <p className="text-zinc-500 mb-12">Last updated: March 02, 2026</p>
+        <p className="text-foreground/40 mb-12 font-medium uppercase tracking-widest text-[10px]">Last updated: March 02, 2026</p>
 
         <div className="space-y-12">
           <section>
-            <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-3">
-              <span className="w-1.5 h-6 bg-brand-purple rounded-full" />
+            <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-3">
+              <span className="w-1.5 h-6 bg-primary rounded-full" />
               1. Acceptance of Terms
             </h2>
             <p className="leading-relaxed">
@@ -34,8 +34,8 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-3">
-              <span className="w-1.5 h-6 bg-brand-purple rounded-full" />
+            <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-3">
+              <span className="w-1.5 h-6 bg-primary rounded-full" />
               2. User Accounts
             </h2>
             <p className="leading-relaxed mb-4">
@@ -47,8 +47,8 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-3">
-              <span className="w-1.5 h-6 bg-brand-purple rounded-full" />
+            <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-3">
+              <span className="w-1.5 h-6 bg-primary rounded-full" />
               3. Subscription & Billing
             </h2>
             <p className="leading-relaxed">
@@ -57,14 +57,14 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-3">
-              <span className="w-1.5 h-6 bg-brand-purple rounded-full" />
+            <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-3">
+              <span className="w-1.5 h-6 bg-primary rounded-full" />
               4. Acceptable Use
             </h2>
             <p className="leading-relaxed mb-4">
               You agree not to use the Service for any purpose that is prohibited by these Terms. You are responsible for all of your activity in connection with the Service.
             </p>
-            <ul className="list-disc pl-6 space-y-2 text-zinc-400">
+            <ul className="list-disc pl-6 space-y-2 text-foreground/60">
               <li>No illegal or unauthorized purpose</li>
               <li>No interference with or disruption of the Service</li>
               <li>No attempt to gain unauthorized access to the Service or its related systems</li>
@@ -73,8 +73,8 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-3">
-              <span className="w-1.5 h-6 bg-brand-purple rounded-full" />
+            <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-3">
+              <span className="w-1.5 h-6 bg-primary rounded-full" />
               5. Intellectual Property
             </h2>
             <p className="leading-relaxed">
@@ -83,8 +83,8 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-3">
-              <span className="w-1.5 h-6 bg-brand-purple rounded-full" />
+            <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-3">
+              <span className="w-1.5 h-6 bg-primary rounded-full" />
               6. Limitation of Liability
             </h2>
             <p className="leading-relaxed">
@@ -95,17 +95,17 @@ export default function TermsPage() {
       </main>
 
       {/* Footer */}
-      <footer className="py-20 px-6 border-t border-white/5 bg-[#050505]">
+      <footer className="py-20 px-6 border-t border-border bg-card">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-10">
-          <div className="text-xl font-bold tracking-tighter text-white">
-            COLLABCODE<span className="text-brand-purple">.</span>
+          <div className="text-xl font-bold tracking-tighter text-foreground uppercase">
+            COLLABCODE<span className="text-primary">.</span>
           </div>
-          <div className="flex gap-12 text-zinc-500 text-sm font-medium">
-            <Link href="/" className="hover:text-brand-purple transition-all duration-300">Home</Link>
-            <Link href="/privacy" className="hover:text-brand-purple transition-all duration-300">Privacy</Link>
-            <Link href="/auth?mode=signup" className="hover:text-brand-purple transition-all duration-300">Sign Up</Link>
+          <div className="flex gap-12 text-foreground/40 text-sm font-medium uppercase tracking-widest text-[10px]">
+            <Link href="/" className="hover:text-primary transition-all duration-300">Home</Link>
+            <Link href="/privacy" className="hover:text-primary transition-all duration-300">Privacy</Link>
+            <Link href="/auth?mode=signup" className="hover:text-primary transition-all duration-300">Sign Up</Link>
           </div>
-          <div className="text-zinc-600 text-[10px] uppercase tracking-[0.2em] font-bold">
+          <div className="text-foreground/20 text-[10px] uppercase tracking-[0.2em] font-bold">
             © 2026 CollabCode Inc.
           </div>
         </div>

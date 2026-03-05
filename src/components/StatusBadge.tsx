@@ -7,23 +7,23 @@ interface StatusBadgeProps {
 
 const statusConfig = {
   live: {
-    bg: "bg-green-500/10",
-    text: "text-green-500",
-    dotBg: "bg-green-500",
+    bg: "bg-primary/10",
+    text: "text-primary",
+    dotBg: "bg-primary",
     label: "Live",
     animate: true,
   },
   idle: {
-    bg: "bg-slate-500/10",
-    text: "text-slate-400",
-    dotBg: "bg-slate-400",
+    bg: "bg-muted",
+    text: "text-foreground/40",
+    dotBg: "bg-foreground/40",
     label: "Idle",
     animate: false,
   },
   away: {
     bg: "bg-yellow-500/10",
-    text: "text-yellow-400",
-    dotBg: "bg-yellow-400",
+    text: "text-yellow-500",
+    dotBg: "bg-yellow-500",
     label: "Away",
     animate: false,
   },
@@ -41,7 +41,7 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({
         px-1.5 py-0.5 rounded-md ${config.bg} ${config.text}
         text-[9px] font-bold uppercase tracking-widest
         flex items-center gap-1.5 backdrop-blur-md
-        border border-white/5
+        border border-border
         ${className}
       `}
     >

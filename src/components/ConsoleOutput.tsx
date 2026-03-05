@@ -11,11 +11,11 @@ interface ConsoleLineProps {
 }
 
 const typeColorMap = {
-  command: "text-slate-100",
-  output: "text-slate-400",
-  success: "text-emerald-500",
-  info: "text-blue-400",
-  warning: "text-yellow-400",
+  command: "text-foreground",
+  output: "text-foreground/40",
+  success: "text-primary",
+  info: "text-accent",
+  warning: "text-yellow-500",
   path: "text-primary",
 };
 
@@ -28,7 +28,7 @@ export const ConsoleOutput: React.FC<ConsoleOutputProps> = ({
       className={`font-mono text-[11px] overflow-auto custom-scrollbar ${className}`}
     >
       {lines.map((line, index) => (
-        <div key={index} className={`${typeColorMap[line.type ?? "output"]}`}>
+        <div key={index} className={`${typeColorMap[line.type ?? "output"] || typeColorMap.output}`}>
           {line.content}
         </div>
       ))}

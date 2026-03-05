@@ -11,3 +11,4 @@ export { ConsoleOutput } from "./ConsoleOutput";
 export { Modal } from "./Modal";
 export { Toggle } from "./Toggle";
 export { LanguageTag } from "./LanguageTag";
+export { ThemeToggle } from "./ThemeToggle";

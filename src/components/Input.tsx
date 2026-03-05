@@ -24,13 +24,15 @@ export const Input: React.FC<InputProps> = ({
   minLength,
 }) => {
   return (
-    <div className={`flex flex-col gap-1.5 ${className}`}>
+    <div className={`flex flex-col gap-2 ${className}`}>
       {label && (
-        <label className="text-sm font-medium text-slate-400">{label}</label>
+        <label className="text-[10px] font-black uppercase tracking-[0.2em] text-foreground/40 px-1">
+          {label}
+        </label>
       )}
-      <div className="relative">
+      <div className="relative group">
         {icon && (
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-foreground/40 group-focus-within:text-primary transition-colors">
             {icon}
           </span>
         )}
@@ -42,12 +44,12 @@ export const Input: React.FC<InputProps> = ({
           required={required}
           minLength={minLength}
           className={`
-            w-full ${icon ? "pl-10" : "pl-4"} pr-4 py-2.5
-            rounded-lg border border-white/5 bg-white/5
-            text-white
-            focus:ring-2 focus:ring-primary/40 focus:border-primary/40
-            outline-none transition-all
-            placeholder:text-slate-600 shadow-sm
+            w-full ${icon ? "pl-11" : "pl-5"} pr-5 py-3
+            rounded-xl border border-border bg-card
+            text-foreground font-bold text-sm
+            focus:ring-2 focus:ring-primary/20 focus:border-primary
+            outline-none transition-all duration-300
+            placeholder:text-foreground/20 shadow-inner
           `}
         />
       </div>

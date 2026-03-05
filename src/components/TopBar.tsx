@@ -16,13 +16,14 @@ import {
   Download,
 } from "lucide-react";
 import { Button } from "./Button";
+import { ThemeToggle } from "./ThemeToggle";
 
 interface TopBarProps {
   roomName?: string;
   showLiveBadge?: boolean;
   participants?: {
     initials: string;
-    color: "purple" | "orange" | "blue" | "emerald";
+    color: "teal" | "cyan" | "emerald" | "sky";
   }[];
   onShare?: () => void;
   onDownload?: () => void;
@@ -65,24 +66,24 @@ export const TopBar: React.FC<TopBarProps> = ({
 
   return (
     <header
-      className={`flex items-center justify-between h-14 px-4 border-b border-white/5 bg-black/40 backdrop-blur-xl sticky top-0 z-50 ${className}`}
+      className={`flex items-center justify-between h-14 px-4 border-b border-border bg-background/80 backdrop-blur-xl sticky top-0 z-50 ${className}`}
     >
       <div className="flex items-center gap-4">
         <Link
           href="/dashboard"
-          className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
+          className="p-1.5 rounded-lg text-foreground/40 hover:text-primary hover:bg-primary/5 transition-colors"
           aria-label="Back to dashboard"
         >
           <ArrowLeft className="w-4 h-4" />
         </Link>
         <Logo size="sm" showIcon={true} />
-        <span className="text-primary/60 font-medium">/</span>
-        <span className="text-slate-100 text-sm font-bold">{roomName}</span>
+        <span className="text-foreground/20 font-black">/</span>
+        <span className="text-foreground text-sm font-black uppercase tracking-tight">{roomName}</span>
 
         {showLiveBadge && (
-          <div className="flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-primary/10 border border-primary/30 shadow-[0_0_15px_rgba(137,90,246,0.3)]">
-            <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse shadow-[0_0_8px_#895af6]" />
-            <span className="text-[9px] font-bold text-primary uppercase tracking-[0.2em]">
+          <div className="flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-primary/10 border border-primary/30 shadow-lg shadow-primary/20">
+            <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse shadow-lg shadow-primary/60" />
+            <span className="text-[9px] font-black text-primary uppercase tracking-[0.2em]">
               Live
             </span>
           </div>
@@ -95,7 +96,7 @@ export const TopBar: React.FC<TopBarProps> = ({
           size="sm"
           ariaLabel="Download code"
           onClick={onDownload}
-          className="text-slate-400 hover:text-primary hover:bg-primary/5 border-white/5"
+          className="text-foreground/60 hover:text-primary hover:bg-primary/5 border-none font-black uppercase tracking-widest text-[10px]"
         >
           <Download className="w-3.5 h-3.5" />
           Download
@@ -106,36 +107,41 @@ export const TopBar: React.FC<TopBarProps> = ({
           size="sm"
           ariaLabel="Share room"
           onClick={onShare}
+          className="font-black uppercase tracking-widest text-[10px] shadow-lg shadow-primary/20 hover:scale-[1.02] transition-transform"
         >
           <Share className="w-3.5 h-3.5" />
           Share
         </Button>
 
+        <ThemeToggle />
+
         {/* User Avatar Dropdown */}
         <div className="relative" ref={menuRef}>
           <button
             onClick={() => setShowUserMenu((v) => !v)}
-            className="size-8 rounded-full bg-primary/20 border border-primary/30 overflow-hidden flex items-center justify-center text-[10px] font-bold text-primary cursor-pointer hover:ring-2 hover:ring-primary/40 transition-all"
+            className="size-8 rounded-full bg-primary/10 border border-primary/30 overflow-hidden flex items-center justify-center text-[10px] font-black text-primary cursor-pointer hover:ring-2 hover:ring-primary/40 transition-all shadow-lg shadow-primary/10"
           >
             {initials}
           </button>
 
           {showUserMenu && (
-            <div className="absolute right-0 top-full mt-2 w-56 bg-[#0d0a14] border border-white/10 rounded-xl shadow-2xl overflow-hidden z-[100] animate-in fade-in slide-in-from-top-2 duration-150">
-              <div className="px-4 py-3 border-b border-white/5">
-                <p className="text-sm font-semibold text-white truncate">
+            <div className="absolute right-0 top-full mt-3 w-60 bg-card border border-border rounded-2xl shadow-2xl overflow-hidden z-[100] animate-in fade-in zoom-in-95 duration-150">
+              <div className="px-5 py-4 border-b border-border bg-background/20">
+                <p className="text-sm font-black text-foreground truncate">
                   {user?.displayName}
                 </p>
-                <p className="text-xs text-slate-500 truncate">{user?.email}</p>
+                <p className="text-xs text-foreground/40 truncate mt-0.5 font-medium">{user?.email}</p>
               </div>
-              <div className="py-1">
+              <div className="p-2">
                 <Link
                   href="/profile"
                   onClick={() => setShowUserMenu(false)}
-                  className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-300 hover:bg-white/5 transition-colors"
+                  className="flex items-center gap-3 px-3 py-2.5 text-sm text-foreground/80 hover:bg-primary/5 rounded-xl transition-colors group"
                 >
-                  <User className="w-4 h-4" />
-                  Profile
+                  <div className="size-8 rounded-lg bg-primary/5 flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+                    <User className="w-4 h-4 text-primary" />
+                  </div>
+                  <span className="font-bold">Profile Settings</span>
                 </Link>
                 {onSettings && (
                   <button
@@ -143,24 +149,28 @@ export const TopBar: React.FC<TopBarProps> = ({
                       setShowUserMenu(false);
                       onSettings();
                     }}
-                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-300 hover:bg-white/5 transition-colors cursor-pointer"
+                    className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-foreground/80 hover:bg-primary/5 rounded-xl transition-colors cursor-pointer group"
                   >
-                    <Settings className="w-4 h-4" />
-                    Room Settings
+                    <div className="size-8 rounded-lg bg-primary/5 flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+                      <Settings className="w-4 h-4 text-primary" />
+                    </div>
+                    <span className="font-bold">Room Configuration</span>
                   </button>
                 )}
               </div>
-              <div className="border-t border-white/5 py-1">
+              <div className="p-2 border-t border-border bg-background/10">
                 <button
                   onClick={async () => {
                     setShowUserMenu(false);
                     await logout();
                     router.push("/auth");
                   }}
-                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
+                  className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-red-500 hover:bg-red-500/10 rounded-xl transition-colors cursor-pointer group"
                 >
-                  <LogOut className="w-4 h-4" />
-                  Log out
+                  <div className="size-8 rounded-lg bg-red-500/10 flex items-center justify-center group-hover:bg-red-500/20 transition-colors">
+                    <LogOut className="w-4 h-4" />
+                  </div>
+                  <span className="font-bold">Sign out</span>
                 </button>
               </div>
             </div>

@@ -22,12 +22,12 @@ export const Toggle: React.FC<ToggleProps> = ({
       {(label || description) && (
         <div className="flex flex-col">
           {label && (
-            <span className="text-sm font-semibold text-slate-300">
+            <span className="text-sm font-semibold text-foreground">
               {label}
             </span>
           )}
           {description && (
-            <span className="text-xs text-slate-400">{description}</span>
+            <span className="text-xs text-foreground/40">{description}</span>
           )}
         </div>
       )}
@@ -41,12 +41,12 @@ export const Toggle: React.FC<ToggleProps> = ({
         />
         <div
           className={`
-            w-11 h-6 bg-slate-800 border border-white/5
+            w-11 h-6 bg-muted border border-border
             rounded-full peer
             peer-checked:bg-primary
             after:content-[''] after:absolute
             after:top-[2px] after:start-[2px]
-            after:bg-white after:rounded-full
+            after:bg-foreground after:rounded-full
             after:h-5 after:w-5 after:transition-all
             peer-checked:after:translate-x-full
             shadow-inner

@@ -65,40 +65,40 @@ export default function ProfileClient() {
 
   return (
     <ProtectedRoute>
-      <div className="flex h-screen overflow-hidden bg-background-dark">
+      <div className="flex h-screen overflow-hidden bg-background">
         <Sidebar activeItem="" />
 
-        <main className="flex-1 flex flex-col overflow-hidden bg-background-dark">
-          <header className="h-16 flex items-center px-8 bg-[#050308]/80 backdrop-blur-md border-b border-white/5 sticky top-0 z-50">
-            <h2 className="text-sm font-bold uppercase tracking-widest text-slate-500">
-              Account / <span className="text-slate-200">Profile</span>
+        <main className="flex-1 flex flex-col overflow-hidden bg-background">
+          <header className="h-16 flex items-center px-8 bg-background/80 backdrop-blur-md border-b border-border sticky top-0 z-50">
+            <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-foreground/40">
+              Account / <span className="text-foreground">Profile</span>
             </h2>
           </header>
 
           <div className="flex-1 overflow-y-auto custom-scrollbar">
             <div className="max-w-3xl mx-auto p-8 space-y-8">
               {/* Profile Header */}
-              <div className="bg-[#0a0a0a] border border-white/5 rounded-xl p-8">
-                <div className="flex items-center gap-6">
-                  <div className="size-20 rounded-full bg-primary/20 border-2 border-primary/30 flex items-center justify-center text-2xl font-bold text-primary">
+              <div className="bg-card border border-border rounded-2xl p-10 shadow-2xl shadow-black/5">
+                <div className="flex items-center gap-8">
+                  <div className="size-24 rounded-full bg-primary/10 border-2 border-primary/30 flex items-center justify-center text-3xl font-black text-primary shadow-lg shadow-primary/10">
                     {initials}
                   </div>
                   <div className="flex-1">
-                    <h1 className="text-2xl font-bold tracking-tight text-white">
+                    <h1 className="text-3xl font-black tracking-tight text-foreground">
                       {user?.displayName || "—"}
                     </h1>
                     {user?.username && (
-                      <p className="text-sm text-primary/80 font-medium mt-0.5">
+                      <p className="text-sm text-primary font-bold uppercase tracking-widest mt-1">
                         @{user.username}
                       </p>
                     )}
-                    <div className="flex items-center gap-4 mt-2">
-                      <div className="flex items-center gap-1.5 text-sm text-slate-400">
+                    <div className="flex items-center gap-6 mt-4">
+                      <div className="flex items-center gap-2 text-xs font-bold text-foreground/40 uppercase tracking-widest">
                         <Mail className="w-3.5 h-3.5" />
                         {user?.email || "—"}
                       </div>
                       {user?.createdAt && (
-                        <div className="flex items-center gap-1.5 text-sm text-slate-500">
+                        <div className="flex items-center gap-2 text-xs font-bold text-foreground/30 uppercase tracking-widest">
                           <Calendar className="w-3.5 h-3.5" />
                           Joined {formatDate(user.createdAt)}
                         </div>
@@ -109,36 +109,36 @@ export default function ProfileClient() {
               </div>
 
               {/* Current Plan */}
-              <div className="bg-[#0a0a0a] border border-white/5 rounded-xl overflow-hidden">
-                <div className="px-8 py-5 border-b border-white/5 flex items-center justify-between">
+              <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-2xl shadow-black/5">
+                <div className="px-8 py-6 border-b border-border flex items-center justify-between bg-foreground/5">
                   <div className="flex items-center gap-3">
                     <Crown className="w-5 h-5 text-primary" />
-                    <h2 className="text-sm font-bold uppercase tracking-widest text-slate-300">
-                      Current Plan
+                    <h2 className="text-xs font-black uppercase tracking-[0.2em] text-foreground">
+                      Current Subscription
                     </h2>
                   </div>
-                  <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/30">
-                    <span className="text-xs font-bold text-primary uppercase tracking-wider">
-                      {user?.plan?.name || "Free"}
+                  <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/30 shadow-lg shadow-primary/10">
+                    <span className="text-[10px] font-black text-primary uppercase tracking-widest">
+                      {user?.plan?.name || "Free Tier"}
                     </span>
                   </div>
                 </div>
 
-                <div className="px-8 py-6">
+                <div className="px-8 py-8">
                   <div className="grid grid-cols-2 gap-6">
                     {planStats.map((stat) => (
                       <div
                         key={stat.label}
-                        className="flex items-center gap-3 p-4 bg-white/[0.02] rounded-lg border border-white/5"
+                        className="flex items-center gap-4 p-5 bg-foreground/5 rounded-xl border border-border hover:border-primary/20 transition-all group"
                       >
-                        <div className="size-9 rounded-lg bg-primary/10 flex items-center justify-center">
-                          <stat.icon className="w-4 h-4 text-primary" />
+                        <div className="size-10 rounded-xl bg-primary/5 flex items-center justify-center border border-primary/10 group-hover:bg-primary/10 transition-colors">
+                          <stat.icon className="w-5 h-5 text-primary" />
                         </div>
                         <div>
-                          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                          <p className="text-[9px] font-black uppercase tracking-[0.2em] text-foreground/30 mb-1">
                             {stat.label}
                           </p>
-                          <p className="text-lg font-bold text-slate-100">
+                          <p className="text-xl font-black text-foreground">
                             {stat.value}
                           </p>
                         </div>
@@ -146,16 +146,16 @@ export default function ProfileClient() {
                     ))}
                   </div>
 
-                  <div className="mt-6 pt-6 border-t border-white/5">
+                  <div className="mt-8 pt-8 border-t border-border">
                     <Link href="/plans">
                       <Button
                         variant="primary"
-                        size="md"
-                        className="!shadow-none font-bold tracking-wide uppercase text-[11px]"
+                        size="lg"
+                        className="shadow-lg shadow-primary/20 font-black tracking-widest uppercase text-[11px] rounded-xl px-10"
                         ariaLabel="View plans"
                       >
-                        Upgrade Plan
-                        <ArrowRight className="w-4 h-4" />
+                        Upgrade Workspace
+                        <ArrowRight className="w-4 h-4 ml-2" />
                       </Button>
                     </Link>
                   </div>

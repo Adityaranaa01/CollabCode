@@ -3,22 +3,26 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTheme } from "@/contexts/ThemeContext";
 import { roomApi, Room, DashboardData } from "@/lib/api";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
-import { Sidebar } from "@/components/Sidebar";
-import { RoomCard } from "@/components/RoomCard";
-import { Modal } from "@/components/Modal";
-import { Toggle } from "@/components/Toggle";
-import { Button } from "@/components/Button";
+import {
+  Sidebar,
+  RoomCard,
+  Modal,
+  Toggle,
+  Button,
+  ThemeToggle,
+} from "@/components";
 import { Search, PlusCircle, ChevronDown, LogOut, Loader2 } from "lucide-react";
 
 const GRADIENTS = [
-  "bg-gradient-to-br from-primary/20 to-blue-500/20",
-  "bg-gradient-to-br from-cyan-500/20 to-primary/20",
-  "bg-gradient-to-br from-indigo-500/20 to-primary/20",
-  "bg-gradient-to-br from-pink-500/20 to-primary/20",
-  "bg-gradient-to-br from-amber-500/10 to-orange-900/20",
-  "bg-gradient-to-br from-slate-500/20 to-slate-800/20",
+  "from-primary/20 to-accent/20",
+  "from-accent/20 to-primary/20",
+  "from-primary/10 to-primary/20",
+  "from-accent/10 to-accent/20",
+  "from-primary/5 to-accent/10",
+  "from-muted to-background",
 ];
 
 type FilterTab = "All Rooms" | "Owned" | "Joined" | "Public";
@@ -30,6 +34,7 @@ function roomGradient(index: number) {
 
 export default function DashboardPage() {
   const { accessToken, user, logout } = useAuth();
+  const { isDark } = useTheme();
   const router = useRouter();
 
   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
@@ -154,29 +159,25 @@ export default function DashboardPage() {
 
   return (
     <ProtectedRoute>
-      <div className="flex h-screen overflow-hidden bg-[#050308]">
+      <div className="flex h-screen overflow-hidden bg-background">
         <Sidebar activeItem="Rooms" onCreateRoom={() => setIsModalOpen(true)} />
 
-        <main className="flex-1 flex flex-col overflow-hidden bg-[#050308] relative">
-          {/* Background Ambient Glows */}
-          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] pointer-events-none" />
-          <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-blue-500/5 rounded-full blur-[100px] pointer-events-none" />
-
-          <header className="h-16 flex items-center justify-between px-8 bg-[#050308]/60 backdrop-blur-xl border-b border-white/[0.04] sticky top-0 z-50">
+        <main className="flex-1 flex flex-col overflow-hidden bg-background relative">
+          <header className="h-16 flex items-center justify-between px-8 bg-background/60 backdrop-blur-xl border-b border-border sticky top-0 z-50">
             <div className="flex items-center gap-8">
               <div className="flex items-center gap-2">
-                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-foreground/40">
                   Workspace
                 </span>
-                <span className="text-slate-700">/</span>
-                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-200">
+                <span className="text-foreground/20">/</span>
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-foreground">
                   Rooms
                 </span>
               </div>
               <div className="relative group">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 w-3.5 h-3.5 group-focus-within:text-primary transition-colors" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/40 w-3.5 h-3.5 group-focus-within:text-primary transition-colors" />
                 <input
-                  className="w-72 pl-10 pr-4 py-2 bg-white/[0.03] border border-white/[0.05] rounded-xl text-xs focus:ring-1 focus:ring-primary/40 focus:border-primary/40 focus:bg-white/[0.05] outline-none transition-all placeholder:text-slate-600 shadow-inner"
+                  className="w-72 pl-10 pr-4 py-2 bg-card border border-border rounded-xl text-xs text-foreground focus:ring-1 focus:ring-primary/40 focus:border-primary/40 outline-none transition-all placeholder:text-foreground/20 shadow-inner"
                   placeholder="Search projects..."
                   type="text"
                   value={searchQuery}
@@ -184,26 +185,28 @@ export default function DashboardPage() {
                 />
               </div>
             </div>
-            <div className="flex items-center gap-4 relative" ref={menuRef}>
+            <div className="flex items-center gap-6 relative" ref={menuRef}>
+              <ThemeToggle />
+              
               <div
-                className="group flex items-center gap-0 rounded-full bg-white/[0.03] border border-white/[0.05] hover:border-primary/30 transition-all duration-300 cursor-pointer overflow-hidden"
+                className="group flex items-center gap-0 rounded-full bg-card border border-border hover:border-primary/30 transition-all duration-300 cursor-pointer overflow-hidden"
                 onClick={() => setShowUserMenu((v) => !v)}
               >
-                <span className="max-w-0 group-hover:max-w-[120px] overflow-hidden transition-all duration-300 ease-in-out whitespace-nowrap text-xs font-medium text-slate-300 group-hover:pl-3.5 group-hover:pr-1.5">
+                <span className="max-w-0 group-hover:max-w-[120px] overflow-hidden transition-all duration-300 ease-in-out whitespace-nowrap text-xs font-bold text-foreground group-hover:pl-3.5 group-hover:pr-1.5">
                   {user?.displayName?.split(" ")[0]}
                 </span>
-                <span className="size-8 rounded-full bg-gradient-to-br from-primary to-purple-600 border border-white/10 flex items-center justify-center text-[10px] font-bold text-white shadow-lg shrink-0">
+                <span className="size-8 rounded-full bg-gradient-to-br from-primary to-accent border border-primary/20 flex items-center justify-center text-[10px] font-black text-primary-foreground shadow-lg shrink-0">
                   {initials}
                 </span>
               </div>
 
               {showUserMenu && (
-                <div className="absolute right-0 top-full mt-3 w-64 bg-[#0d0a14] border border-white/[0.08] rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden z-[100] animate-in fade-in zoom-in-95 duration-200">
-                  <div className="px-5 py-4 border-b border-white/[0.04] bg-white/[0.02]">
-                    <p className="text-sm font-bold text-white truncate">
+                <div className="absolute right-0 top-full mt-3 w-64 bg-card border border-border rounded-2xl shadow-2xl overflow-hidden z-[100] animate-in fade-in zoom-in-95 duration-200">
+                  <div className="px-5 py-4 border-b border-border bg-background/20">
+                    <p className="text-sm font-black text-foreground truncate">
                       {user?.displayName}
                     </p>
-                    <p className="text-xs text-slate-500 truncate mt-0.5">
+                    <p className="text-xs text-foreground/40 truncate mt-0.5 font-medium">
                       {user?.email}
                     </p>
                   </div>
@@ -214,12 +217,12 @@ export default function DashboardPage() {
                         await logout();
                         router.push("/auth");
                       }}
-                      className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-red-400 hover:bg-red-500/10 rounded-xl transition-colors cursor-pointer group"
+                      className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-red-500 hover:bg-red-500/10 rounded-xl transition-colors cursor-pointer group"
                     >
                       <div className="size-8 rounded-lg bg-red-500/10 flex items-center justify-center group-hover:bg-red-500/20 transition-colors">
                         <LogOut className="w-4 h-4" />
                       </div>
-                      <span className="font-medium">Sign out</span>
+                      <span className="font-bold">Sign out</span>
                     </button>
                   </div>
                 </div>
@@ -231,20 +234,20 @@ export default function DashboardPage() {
             <div className="max-w-[1400px] mx-auto p-10">
               <div className="flex items-center justify-between mb-16">
                 <div className="space-y-2">
-                  <h1 className="text-4xl font-black tracking-tight text-white flex items-center gap-3">
+                  <h1 className="text-4xl font-black tracking-tight text-foreground flex items-center gap-3">
                     Hi, {user?.displayName?.split(" ")[0] || "there"}
                     <span className="inline-block animate-bounce text-2xl">
                       👋
                     </span>
                   </h1>
-                  <p className="text-slate-400 text-sm font-medium flex items-center gap-2">
-                    <span className="inline-block w-2 h-2 rounded-full bg-primary shadow-[0_0_8px_#895af6]" />
+                  <p className="text-foreground/50 text-sm font-bold flex items-center gap-2">
+                    <span className="inline-block w-2 h-2 rounded-full bg-primary shadow-lg shadow-primary/60" />
                     Managing{" "}
-                    <span className="text-slate-200 font-bold">
+                    <span className="text-foreground font-black">
                       {totalRooms} projects
                     </span>{" "}
                     with{" "}
-                    <span className="text-slate-200 font-bold">
+                    <span className="text-foreground font-black">
                       {totalMembers} collaborators
                     </span>
                     .
@@ -253,7 +256,7 @@ export default function DashboardPage() {
                 <Button
                   variant="primary"
                   size="lg"
-                  className="!shadow-[0_10px_30px_-10px_rgba(137,90,246,0.6)] font-bold tracking-wider uppercase text-[11px] px-8 rounded-2xl"
+                  className="font-black tracking-wider uppercase text-[11px] px-8 rounded-2xl"
                   onClick={() => setIsModalOpen(true)}
                 >
                   <PlusCircle className="w-4 h-4" />
@@ -261,7 +264,7 @@ export default function DashboardPage() {
                 </Button>
               </div>
 
-              <div className="flex gap-10 border-b border-white/[0.04] mb-10">
+              <div className="flex gap-10 border-b border-border mb-10">
                 {filters.map((filter) => (
                   <button
                     key={filter}
@@ -269,12 +272,12 @@ export default function DashboardPage() {
                     className={`pb-5 text-xs font-black uppercase tracking-[0.15em] transition-all relative cursor-pointer ${
                       activeFilter === filter
                         ? "text-primary"
-                        : "text-slate-500 hover:text-slate-300"
+                        : "text-foreground/40 hover:text-foreground/60"
                     }`}
                   >
                     {filter}
                     {activeFilter === filter && (
-                      <div className="absolute bottom-0 left-0 w-full h-0.5 bg-primary shadow-[0_0_10px_#895af6] rounded-full" />
+                      <div className="absolute bottom-0 left-0 w-full h-0.5 bg-primary shadow-lg shadow-primary/60 rounded-full" />
                     )}
                   </button>
                 ))}
@@ -288,10 +291,10 @@ export default function DashboardPage() {
 
               {error && !loading && (
                 <div className="text-center py-20">
-                  <p className="text-red-400 text-sm">{error}</p>
+                  <p className="text-red-400 text-sm font-bold">{error}</p>
                   <button
                     onClick={fetchDashboard}
-                    className="mt-4 text-xs text-primary hover:underline cursor-pointer"
+                    className="mt-4 text-xs text-primary font-black uppercase tracking-widest hover:underline cursor-pointer"
                   >
                     Retry
                   </button>
@@ -300,7 +303,7 @@ export default function DashboardPage() {
 
               {!loading && !error && filteredRooms.length === 0 && (
                 <div className="text-center py-20">
-                  <p className="text-slate-500 text-sm">
+                  <p className="text-foreground/40 text-sm font-medium">
                     {searchQuery
                       ? "No rooms match your search."
                       : "No rooms yet. Create your first room to get started."}
@@ -376,7 +379,7 @@ export default function DashboardPage() {
               <Button
                 variant="ghost"
                 size="md"
-                className="text-[11px] font-bold uppercase tracking-wider"
+                className="text-[11px] font-black uppercase tracking-widest text-foreground/60 hover:text-primary"
                 onClick={() => {
                   setIsModalOpen(false);
                   setCreateError(null);
@@ -388,7 +391,7 @@ export default function DashboardPage() {
               <Button
                 variant="primary"
                 size="md"
-                className="!shadow-none text-[11px] font-bold uppercase tracking-wider"
+                className="text-[11px] font-black uppercase tracking-widest"
                 ariaLabel="Create room"
                 onClick={handleCreateRoom}
                 disabled={creating || !roomName.trim()}
@@ -402,18 +405,18 @@ export default function DashboardPage() {
             <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 space-y-2 mb-4">
               <div className="flex items-center gap-2 text-red-400">
                 <PlusCircle className="w-4 h-4 rotate-45" />
-                <p className="text-xs font-bold uppercase tracking-wider">
+                <p className="text-xs font-black uppercase tracking-wider">
                   Plan Limit Reached
                 </p>
               </div>
-              <p className="text-[13px] text-slate-300 leading-relaxed">
+              <p className="text-[13px] text-foreground/80 leading-relaxed font-medium">
                 {createError.includes("limit")
                   ? "You've reached the maximum number of rooms for your current plan. Upgrade to create more."
                   : createError}
               </p>
               <a
                 href="/plans"
-                className="inline-block text-[11px] font-bold text-primary hover:underline uppercase tracking-widest mt-1"
+                className="inline-block text-[11px] font-black text-primary hover:underline uppercase tracking-widest mt-1"
               >
                 View Plans →
               </a>
@@ -421,7 +424,7 @@ export default function DashboardPage() {
           )}
 
           <div className="flex flex-col gap-2">
-            <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+            <label className="text-[10px] font-black uppercase tracking-widest text-foreground/40">
               Room Name
             </label>
             <input
@@ -429,19 +432,19 @@ export default function DashboardPage() {
               placeholder="e.g. Frontend Refactor"
               value={roomName}
               onChange={(e) => setRoomName(e.target.value)}
-              className="w-full h-11 bg-white/[0.03] border border-white/5 rounded-lg px-4 text-sm text-white focus:ring-1 focus:ring-primary/50 outline-none transition-all placeholder:text-slate-600"
+              className="w-full h-11 bg-background/50 border border-border rounded-xl px-4 text-sm text-foreground focus:ring-1 focus:ring-primary/50 outline-none transition-all placeholder:text-foreground/20"
             />
           </div>
 
           <div className="flex flex-col gap-2">
-            <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+            <label className="text-[10px] font-black uppercase tracking-widest text-foreground/40">
               Programming Language
             </label>
             <div className="relative">
               <select
                 value={roomLanguage}
                 onChange={(e) => setRoomLanguage(e.target.value)}
-                className="w-full h-11 bg-white/[0.03] border border-white/5 rounded-lg px-4 text-sm text-white appearance-none focus:ring-1 focus:ring-primary/50 outline-none transition-all cursor-pointer [&>option]:bg-[#0a0a0a] [&>option]:text-white"
+                className="w-full h-11 bg-background/50 border border-border rounded-xl px-4 text-sm text-foreground appearance-none focus:ring-1 focus:ring-primary/50 outline-none transition-all cursor-pointer [&>option]:bg-card [&>option]:text-foreground"
               >
                 <option value="python">Python</option>
                 <option value="typescript">TypeScript</option>
@@ -449,7 +452,7 @@ export default function DashboardPage() {
                 <option value="rust">Rust</option>
                 <option value="javascript">JavaScript</option>
               </select>
-              <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500">
+              <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-foreground/40">
                 <ChevronDown className="w-4 h-4" />
               </div>
             </div>

@@ -18,8 +18,8 @@ export const LanguageTag: React.FC<LanguageTagProps> = ({
         transition-all duration-300
         ${
           isActive
-            ? "bg-white/5 text-slate-300 border border-white/10 group-hover:border-primary/40 group-hover:text-primary"
-            : "bg-transparent text-slate-600 border border-white/5"
+            ? "bg-foreground/5 text-foreground/60 border border-border group-hover:border-primary/40 group-hover:text-primary"
+            : "bg-transparent text-foreground/20 border border-border"
         }
         ${className}
       `}

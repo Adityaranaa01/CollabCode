@@ -72,39 +72,39 @@ export default function PlansClient() {
 
   return (
     <ProtectedRoute>
-      <div className="flex h-screen overflow-hidden bg-background-dark">
+      <div className="flex h-screen overflow-hidden bg-background">
         <Sidebar activeItem="" />
 
-        <main className="flex-1 flex flex-col overflow-hidden bg-background-dark">
-          <header className="h-16 flex items-center px-8 bg-[#050308]/80 backdrop-blur-md border-b border-white/5 sticky top-0 z-50">
+        <main className="flex-1 flex flex-col overflow-hidden bg-background">
+          <header className="h-16 flex items-center px-8 bg-background/80 backdrop-blur-md border-b border-border sticky top-0 z-50">
             <div className="flex items-center gap-4">
               <Link
                 href="/profile"
-                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
+                className="p-1.5 rounded-lg text-foreground/40 hover:text-primary hover:bg-primary/5 transition-colors"
               >
                 <ArrowLeft className="w-4 h-4" />
               </Link>
-              <h2 className="text-sm font-bold uppercase tracking-widest text-slate-500">
-                Account / <span className="text-slate-200">Plans</span>
+              <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-foreground/40">
+                Account / <span className="text-foreground">Plans</span>
               </h2>
             </div>
           </header>
 
           <div className="flex-1 overflow-y-auto custom-scrollbar">
-            <div className="max-w-5xl mx-auto p-8 space-y-10">
+            <div className="max-w-5xl mx-auto p-8 space-y-12">
               {/* Header */}
-              <div className="text-center space-y-3">
-                <h1 className="text-3xl font-bold tracking-tight text-white">
+              <div className="text-center space-y-4">
+                <h1 className="text-4xl font-black tracking-tight text-foreground">
                   Choose your plan
                 </h1>
-                <p className="text-slate-500 text-sm max-w-lg mx-auto">
+                <p className="text-foreground/40 text-sm font-medium max-w-lg mx-auto">
                   Scale your collaborative coding workflow with the right plan
                   for your team.
                 </p>
               </div>
 
               {/* Plan Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 {plans.map((plan) => {
                   const isCurrentPlan =
                     plan.name.toLowerCase() === currentPlan;
@@ -114,64 +114,64 @@ export default function PlansClient() {
                     <div
                       key={plan.name}
                       className={`
-                        relative bg-[#0a0a0a] rounded-xl border overflow-hidden
-                        flex flex-col transition-all duration-300
+                        relative bg-card rounded-2xl border overflow-hidden
+                        flex flex-col transition-all duration-300 shadow-2xl shadow-black/5
                         ${
                           isHighlighted
-                            ? "border-primary/40 shadow-[0_0_30px_rgba(137,90,246,0.15)]"
-                            : "border-white/5 hover:border-white/10"
+                            ? "border-primary/40 shadow-lg shadow-primary/10 ring-1 ring-primary/20"
+                            : "border-border hover:border-primary/20"
                         }
                       `}
                     >
                       {plan.badge && (
                         <div className="absolute top-0 right-0">
-                          <div className="flex items-center gap-1 px-3 py-1 bg-primary text-white text-[10px] font-bold uppercase tracking-wider rounded-bl-lg">
+                          <div className="flex items-center gap-1.5 px-4 py-1.5 bg-primary text-primary-foreground text-[10px] font-black uppercase tracking-widest rounded-bl-xl shadow-lg">
                             <Sparkles className="w-3 h-3" />
                             {plan.badge}
                           </div>
                         </div>
                       )}
 
-                      <div className="p-6 flex-1 flex flex-col">
+                      <div className="p-8 flex-1 flex flex-col">
                         {/* Plan Name */}
-                        <h3 className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                        <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-foreground/40">
                           {plan.name}
                         </h3>
 
                         {/* Price */}
                         <div className="mt-4 flex items-baseline gap-1">
-                          <span className="text-4xl font-bold text-white tracking-tight">
+                          <span className="text-5xl font-black text-foreground tracking-tight">
                             {plan.price}
                           </span>
-                          <span className="text-sm text-slate-500">
+                          <span className="text-sm font-bold text-foreground/30 uppercase tracking-widest">
                             /{plan.period}
                           </span>
                         </div>
 
                         {/* Description */}
-                        <p className="mt-3 text-xs text-slate-400 leading-relaxed">
+                        <p className="mt-4 text-xs font-medium text-foreground/50 leading-relaxed">
                           {plan.description}
                         </p>
 
                         {/* Features */}
-                        <ul className="mt-6 space-y-3 flex-1">
+                        <ul className="mt-8 space-y-4 flex-1">
                           {plan.features.map((feature) => (
                             <li
                               key={feature}
-                              className="flex items-center gap-2.5 text-xs text-slate-300"
+                              className="flex items-center gap-3 text-xs font-bold text-foreground/80 uppercase tracking-widest"
                             >
                               <div
-                                className={`size-4 rounded-full flex items-center justify-center ${
+                                className={`size-5 rounded-full flex items-center justify-center border ${
                                   isHighlighted
-                                    ? "bg-primary/20"
-                                    : "bg-white/5"
+                                    ? "bg-primary/10 border-primary/20 shadow-lg shadow-primary/10"
+                                    : "bg-background/30 border-border"
                                 }`}
                               >
                                 <Check
-                                  className={`w-2.5 h-2.5 ${
+                                  className={`w-3 h-3 ${
                                     isHighlighted
                                       ? "text-primary"
-                                      : "text-slate-400"
+                                      : "text-foreground/30"
                                   }`}
                                 />
                               </div>
@@ -181,22 +181,26 @@ export default function PlansClient() {
                         </ul>
 
                         {/* CTA */}
-                        <div className="mt-6 pt-6 border-t border-white/5">
+                        <div className="mt-8 pt-8 border-t border-border">
                           {isCurrentPlan ? (
-                            <div className="w-full py-2.5 px-5 rounded-lg bg-white/5 border border-white/10 text-center text-xs font-bold text-slate-400 uppercase tracking-wider">
+                            <div className="w-full py-3 px-5 rounded-xl bg-primary/5 border border-primary/10 text-center text-[10px] font-black text-primary uppercase tracking-[0.2em]">
                               Current Plan
                             </div>
                           ) : (
                             <Button
                               variant={isHighlighted ? "primary" : "outline"}
-                              size="md"
+                              size="lg"
                               fullWidth
-                              className="text-[11px] font-bold uppercase tracking-wider"
+                              className={`text-[11px] font-black uppercase tracking-widest rounded-xl py-4 transition-all shadow-lg ${
+                                isHighlighted 
+                                  ? "shadow-primary/20 hover:scale-[1.02]" 
+                                  : "border-primary/30 text-primary hover:bg-primary/5"
+                                }`}
                               ariaLabel={`Select ${plan.name} plan`}
                             >
                               {plan.price === "$0"
                                 ? "Downgrade"
-                                : "Upgrade"}
+                                : "Upgrade Workspace"}
                             </Button>
                           )}
                         </div>
