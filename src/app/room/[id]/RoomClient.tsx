@@ -6,19 +6,28 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useRoomSocket } from "@/hooks/useRoomSocket";
 import { roomApi, Room, RoomMember } from "@/lib/api";
+import {
+  getLanguageInfo,
+  getMonacoLanguage,
+  getFileExtension,
+  supportsPreview,
+  loadEditorSettings,
+  saveEditorSettings,
+  type EditorSettings,
+} from "@/lib/languageUtils";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { TopBar } from "@/components/TopBar";
 import { Modal } from "@/components/Modal";
 import { Button } from "@/components/Button";
 import { ParticipantAvatar } from "@/components/ParticipantAvatar";
 import { ChatMessage } from "@/components/ChatMessage";
+import { EditorSettingsPopover } from "@/components/EditorSettings";
+import { KeyboardShortcuts } from "@/components/KeyboardShortcuts";
 import Editor, { type OnMount } from "@monaco-editor/react";
 import type { editor as monacoEditor } from "monaco-editor";
 import {
   FileText,
-  Search,
   GitBranch,
-  Bug,
   User,
   Send,
   Code2,
@@ -29,6 +38,11 @@ import {
   Clock,
   Trash2,
   LogOut,
+  Settings,
+  Keyboard,
+  Eye,
+  EyeOff,
+  GripVertical,
 } from "lucide-react";
 
 const AVATAR_COLORS = ["teal", "cyan", "emerald", "sky"] as const;
@@ -62,20 +76,29 @@ function formatDate(dateStr: string): string {
 function SidebarIcon({
   icon: Icon,
   active,
+  label,
+  onClick,
 }: {
   icon: React.FC<{ className?: string }>;
   active?: boolean;
+  label?: string;
+  onClick?: () => void;
 }) {
   return (
     <div className="relative group">
-      <Icon
-        className={`w-5 h-5 ${
-          active ? "text-primary" : "text-foreground/20 cursor-default"
+      <button
+        onClick={onClick}
+        className={`p-1.5 rounded-lg transition-colors ${
+          active
+            ? "text-primary bg-primary/10"
+            : "text-foreground/30 hover:text-foreground/60 hover:bg-foreground/5 cursor-pointer"
         }`}
-      />
-      {!active && (
-        <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 px-2 py-1 bg-card border border-border rounded text-[10px] text-foreground/40 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
-          Coming soon
+      >
+        <Icon className="w-5 h-5" />
+      </button>
+      {label && (
+        <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 px-2 py-1 bg-card border border-border rounded text-[10px] text-foreground/60 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+          {label}
         </div>
       )}
     </div>
@@ -116,6 +139,17 @@ export default function RoomClient() {
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
 
+  // Editor enhancement state
+  const [cursorPosition, setCursorPosition] = useState({ line: 1, col: 1 });
+  const [editorSettings, setEditorSettings] = useState<EditorSettings>(loadEditorSettings);
+  const [showEditorSettings, setShowEditorSettings] = useState(false);
+  const [showShortcuts, setShowShortcuts] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
+  const [previewContent, setPreviewContent] = useState("");
+  const [panelWidth, setPanelWidth] = useState(320);
+  const isDragging = useRef(false);
+  const previewTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const editorRef = useRef<monacoEditor.IStandaloneCodeEditor | null>(null);
   const remoteUpdateRef = useRef(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -124,9 +158,11 @@ export default function RoomClient() {
     if (typeof window === "undefined" || !editorRef.current) return;
 
     const content = editorRef.current.getValue();
-    const fileName = roomMeta?.name
-      ? `${roomMeta.name.replace(/[^a-z0-9]/gi, "-").toLowerCase()}.txt`
-      : "collabcode-file.txt";
+    const ext = getFileExtension(roomMeta?.language || "plaintext");
+    const baseName = roomMeta?.name
+      ? roomMeta.name.replace(/[^a-z0-9]/gi, "-").toLowerCase()
+      : "collabcode-file";
+    const fileName = `${baseName}${ext}`;
 
     const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
     const url = URL.createObjectURL(blob);
@@ -138,6 +174,11 @@ export default function RoomClient() {
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
   }, [roomMeta]);
+
+  const handleUpdateEditorSettings = useCallback((newSettings: EditorSettings) => {
+    setEditorSettings(newSettings);
+    saveEditorSettings(newSettings);
+  }, []);
 
   useEffect(() => {
     if (!accessToken || !roomId) return;
@@ -179,14 +220,39 @@ export default function RoomClient() {
   }, [roomContent, version]);
 
   const handleEditorMount: OnMount = useCallback(
-    (editor) => {
+    (editor, monaco) => {
       editorRef.current = editor;
       editor.onDidChangeCursorPosition((e) => {
         sendCursor({ line: e.position.lineNumber, ch: e.position.column });
+        setCursorPosition({ line: e.position.lineNumber, col: e.position.column });
+      });
+
+      // Ctrl+S → download
+      // eslint-disable-next-line no-bitwise
+      editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
+        handleDownload();
       });
     },
-    [sendCursor],
+    [sendCursor, handleDownload],
   );
+
+  // Global keyboard shortcuts
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      // Ctrl+Shift+? → shortcuts modal
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === "?") {
+        e.preventDefault();
+        setShowShortcuts((v) => !v);
+      }
+      // Ctrl+, → editor settings
+      if ((e.ctrlKey || e.metaKey) && e.key === ",") {
+        e.preventDefault();
+        setShowEditorSettings((v) => !v);
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   function handleEditorChange(value: string | undefined) {
     if (value === undefined) return;
@@ -195,7 +261,18 @@ export default function RoomClient() {
       return;
     }
     sendPatch(value);
+
+    // Debounced preview update
+    if (previewTimerRef.current) clearTimeout(previewTimerRef.current);
+    previewTimerRef.current = setTimeout(() => {
+      setPreviewContent(value);
+    }, 400);
   }
+
+  // Sync preview when roomContent changes (remote edits)
+  useEffect(() => {
+    setPreviewContent(roomContent);
+  }, [roomContent]);
 
   function handleSendMessage() {
     const trimmed = chatInput.trim();
@@ -277,7 +354,9 @@ export default function RoomClient() {
   const isConnected = connectionStatus === "connected";
   const isReconnecting = connectionStatus === "reconnecting";
   const isError = connectionStatus === "error";
-  const editorLanguage = roomMeta?.language?.toLowerCase() || "plaintext";
+  const editorLanguage = getMonacoLanguage(roomMeta?.language || "plaintext");
+  const langInfo = getLanguageInfo(roomMeta?.language || "plaintext");
+  const canPreview = supportsPreview(roomMeta?.language || "plaintext");
   const isOwner = roomMeta?.owner?.id === user?.id;
 
   return (
@@ -303,11 +382,18 @@ export default function RoomClient() {
         )}
 
         <main className="flex-1 flex overflow-hidden">
-          <aside className="w-12 border-r border-border flex flex-col items-center py-4 gap-6 bg-background backdrop-blur-md z-10">
-            <SidebarIcon icon={FileText} active />
-            <SidebarIcon icon={Search} />
-            <SidebarIcon icon={GitBranch} />
-            <SidebarIcon icon={Bug} />
+          <aside className="w-12 border-r border-border flex flex-col items-center py-4 gap-4 bg-background backdrop-blur-md z-10">
+            <SidebarIcon icon={FileText} active label="Files" />
+            <SidebarIcon
+              icon={Settings}
+              label="Settings (Ctrl+,)"
+              onClick={() => setShowEditorSettings((v) => !v)}
+            />
+            <SidebarIcon
+              icon={Keyboard}
+              label="Shortcuts (Ctrl+Shift+?)"
+              onClick={() => setShowShortcuts(true)}
+            />
           </aside>
 
           {/* Editor Area */}
@@ -322,6 +408,7 @@ export default function RoomClient() {
                 <Code2 className="w-3.5 h-3.5 text-primary" />
                 {roomMeta?.name || "document"}
               </div>
+              <div className="flex-1" />
             </div>
 
             <div className="flex-1 relative">
@@ -354,10 +441,13 @@ export default function RoomClient() {
                 onChange={handleEditorChange}
                 onMount={handleEditorMount}
                 options={{
-                  fontSize: 13,
-                  lineHeight: 24,
+                  fontSize: editorSettings.fontSize,
+                  lineHeight: Math.round(editorSettings.fontSize * 1.8),
                   fontFamily: "'JetBrains Mono', monospace",
-                  minimap: { enabled: false },
+                  minimap: { enabled: editorSettings.minimap },
+                  wordWrap: editorSettings.wordWrap ? "on" : "off",
+                  lineNumbers: editorSettings.lineNumbers ? "on" : "off",
+                  tabSize: editorSettings.tabSize,
                   scrollBeyondLastLine: false,
                   padding: { top: 16 },
                   renderLineHighlight: "gutter",
@@ -365,25 +455,121 @@ export default function RoomClient() {
                   cursorBlinking: "smooth",
                   cursorSmoothCaretAnimation: "on",
                   readOnly: !isConnected,
+                  bracketPairColorization: { enabled: true },
+                  autoClosingBrackets: "always",
+                  autoClosingQuotes: "always",
+                  formatOnPaste: true,
+                  suggestOnTriggerCharacters: true,
                 }}
               />
             </div>
 
-            <div className="h-6 border-t border-border bg-card flex items-center px-3 justify-between text-[10px] text-foreground/40 font-bold uppercase tracking-widest select-none">
-              <div className="flex items-center gap-4">
-                <span>v{version}</span>
+            <div className="h-7 border-t border-border bg-card flex items-center px-3 justify-between text-[10px] text-foreground/40 font-medium select-none">
+              <div className="flex items-center gap-3">
                 {isConnected && (
-                  <span className="text-primary">Connected</span>
+                  <span className="flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    <span className="text-emerald-400 font-bold uppercase tracking-widest">Connected</span>
+                  </span>
                 )}
+                <span className="tabular-nums">Ln {cursorPosition.line}, Col {cursorPosition.col}</span>
               </div>
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3">
+                <span className="text-foreground/50 font-bold">{langInfo.displayName}</span>
+                <span>Spaces: {editorSettings.tabSize}</span>
+                <span>UTF-8</span>
                 <span>{participants.length} online</span>
               </div>
             </div>
+
+            <EditorSettingsPopover
+              settings={editorSettings}
+              onUpdate={handleUpdateEditorSettings}
+              isOpen={showEditorSettings}
+              onClose={() => setShowEditorSettings(false)}
+            />
+            <KeyboardShortcuts isOpen={showShortcuts} onClose={() => setShowShortcuts(false)} />
           </section>
 
+          {/* Drag-to-resize handle */}
+          <div
+            className="w-1 hover:w-1.5 bg-transparent hover:bg-primary/30 cursor-col-resize transition-all relative group flex-shrink-0"
+            onMouseDown={(e) => {
+              e.preventDefault();
+              isDragging.current = true;
+              const startX = e.clientX;
+              const startWidth = panelWidth;
+              const handle = e.currentTarget;
+              handle.classList.add('bg-primary/40');
+
+              function onMouseMove(ev: MouseEvent) {
+                if (!isDragging.current) return;
+                const delta = startX - ev.clientX;
+                const newWidth = Math.min(600, Math.max(200, startWidth + delta));
+                setPanelWidth(newWidth);
+              }
+              function onMouseUp() {
+                isDragging.current = false;
+                handle.classList.remove('bg-primary/40');
+                document.removeEventListener('mousemove', onMouseMove);
+                document.removeEventListener('mouseup', onMouseUp);
+                document.body.style.cursor = '';
+                document.body.style.userSelect = '';
+              }
+              document.addEventListener('mousemove', onMouseMove);
+              document.addEventListener('mouseup', onMouseUp);
+              document.body.style.cursor = 'col-resize';
+              document.body.style.userSelect = 'none';
+            }}
+          >
+            <div className="absolute top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-60 transition-opacity">
+              <GripVertical className="w-3 h-3 text-foreground/40" />
+            </div>
+          </div>
+
           {/* Right Panel */}
-          <aside className="w-80 border-l border-border flex flex-col bg-card backdrop-blur-xl z-10">
+          <aside style={{ width: panelWidth }} className="border-l border-border flex flex-col bg-card backdrop-blur-xl z-10 flex-shrink-0">
+            {/* Panel tabs */}
+            {canPreview && (
+              <div className="flex border-b border-border">
+                <button
+                  onClick={() => setShowPreview(false)}
+                  className={`flex-1 py-2.5 text-[10px] font-black uppercase tracking-widest transition-colors cursor-pointer ${
+                    !showPreview
+                      ? "text-primary border-b-2 border-primary bg-primary/5"
+                      : "text-foreground/30 hover:text-foreground/50"
+                  }`}
+                >
+                  Chat
+                </button>
+                <button
+                  onClick={() => setShowPreview(true)}
+                  className={`flex-1 py-2.5 text-[10px] font-black uppercase tracking-widest transition-colors cursor-pointer flex items-center justify-center gap-1.5 ${
+                    showPreview
+                      ? "text-primary border-b-2 border-primary bg-primary/5"
+                      : "text-foreground/30 hover:text-foreground/50"
+                  }`}
+                >
+                  <Eye className="w-3 h-3" />
+                  Preview
+                </button>
+              </div>
+            )}
+
+            {/* Preview iframe */}
+            {showPreview && canPreview ? (
+              <div className="flex-1 flex flex-col">
+                <div className="flex-1 bg-white relative">
+                  <iframe
+                    title="Live Preview"
+                    className="w-full h-full border-0"
+                    sandbox="allow-scripts allow-modals"
+                    srcDoc={previewContent || ""}
+                  />
+                </div>
+              </div>
+            ) : (
+              <>
             {/* Participants */}
             <div className="p-4 border-b border-border">
               <div className="flex items-center justify-between mb-3">
@@ -481,6 +667,8 @@ export default function RoomClient() {
                 </div>
               </div>
             </div>
+              </>
+            )}
           </aside>
         </main>
 
@@ -496,7 +684,17 @@ export default function RoomClient() {
           </div>
           <div className="flex items-center gap-4">
             <span className="px-1">UTF-8</span>
-            <span className="px-1">{roomMeta?.language || "Plaintext"}</span>
+            <span className="px-1">{langInfo.displayName}</span>
+            {canPreview && (
+              <button
+                onClick={() => setShowPreview((v) => !v)}
+                className="flex items-center gap-1 px-1.5 py-0.5 rounded hover:bg-white/10 transition-colors cursor-pointer"
+                title="Toggle Preview"
+              >
+                {showPreview ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                Preview
+              </button>
+            )}
           </div>
         </footer>
       </div>

@@ -423,6 +423,38 @@ export default function DashboardPage() {
             </div>
           )}
 
+          {/* Template quick picks */}
+          <div className="flex flex-col gap-2">
+            <label className="text-[10px] font-black uppercase tracking-widest text-foreground/40">
+              Start from Template
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {[
+                { label: "HTML Starter", lang: "html", name: "HTML Project" },
+                { label: "React Component", lang: "javascript", name: "React Component" },
+                { label: "Python Script", lang: "python", name: "Python Script" },
+                { label: "TypeScript", lang: "typescript", name: "TypeScript Module" },
+                { label: "REST API", lang: "javascript", name: "REST API" },
+              ].map((t) => (
+                <button
+                  key={t.label}
+                  type="button"
+                  onClick={() => {
+                    setRoomName(t.name);
+                    setRoomLanguage(t.lang);
+                  }}
+                  className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider border transition-all cursor-pointer ${
+                    roomName === t.name && roomLanguage === t.lang
+                      ? "bg-primary/10 border-primary/30 text-primary"
+                      : "bg-foreground/[0.03] border-border text-foreground/50 hover:bg-foreground/[0.06] hover:text-foreground/70"
+                  }`}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <div className="flex flex-col gap-2">
             <label className="text-[10px] font-black uppercase tracking-widest text-foreground/40">
               Room Name
@@ -446,11 +478,23 @@ export default function DashboardPage() {
                 onChange={(e) => setRoomLanguage(e.target.value)}
                 className="w-full h-11 bg-background/50 border border-border rounded-xl px-4 text-sm text-foreground appearance-none focus:ring-1 focus:ring-primary/50 outline-none transition-all cursor-pointer [&>option]:bg-card [&>option]:text-foreground"
               >
-                <option value="python">Python</option>
+                <option value="html">HTML</option>
+                <option value="css">CSS</option>
+                <option value="javascript">JavaScript</option>
                 <option value="typescript">TypeScript</option>
+                <option value="python">Python</option>
+                <option value="java">Java</option>
+                <option value="csharp">C#</option>
+                <option value="cpp">C++</option>
                 <option value="go">Go</option>
                 <option value="rust">Rust</option>
-                <option value="javascript">JavaScript</option>
+                <option value="ruby">Ruby</option>
+                <option value="php">PHP</option>
+                <option value="sql">SQL</option>
+                <option value="markdown">Markdown</option>
+                <option value="json">JSON</option>
+                <option value="yaml">YAML</option>
+                <option value="shell">Shell</option>
               </select>
               <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-foreground/40">
                 <ChevronDown className="w-4 h-4" />

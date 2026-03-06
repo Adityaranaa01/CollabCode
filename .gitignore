@@ -42,4 +42,5 @@ next-env.d.ts
 
 # Docs (local only)
 *.md
+*.resolved
 !README.md
