@@ -8,7 +8,6 @@ import { Component as Globe } from "@/components/ui/interactive-globe";
 import { User, LogOut, Sun, Moon, Zap, Code, Users } from "lucide-react";
 import { div } from "framer-motion/client";
 
-// --- Components ---
 
 const AnimatedNumber = ({ value, suffix = "", decimals = 0 }: { value: number; suffix?: string; decimals?: number }) => {
   const [displayValue, setDisplayValue] = useState(0);

@@ -236,9 +236,6 @@ export default function DashboardPage() {
                 <div className="space-y-2">
                   <h1 className="text-4xl font-black tracking-tight text-foreground flex items-center gap-3">
                     Hi, {user?.displayName?.split(" ")[0] || "there"}
-                    <span className="inline-block animate-bounce text-2xl">
-                      👋
-                    </span>
                   </h1>
                   <p className="text-foreground/50 text-sm font-bold flex items-center gap-2">
                     <span className="inline-block w-2 h-2 rounded-full bg-primary shadow-lg shadow-primary/60" />
@@ -418,7 +415,7 @@ export default function DashboardPage() {
                 href="/plans"
                 className="inline-block text-[11px] font-black text-primary hover:underline uppercase tracking-widest mt-1"
               >
-                View Plans →
+                View Plans &rarr;
               </a>
             </div>
           )}

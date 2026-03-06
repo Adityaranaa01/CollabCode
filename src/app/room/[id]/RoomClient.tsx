@@ -227,7 +227,7 @@ export default function RoomClient() {
         setCursorPosition({ line: e.position.lineNumber, col: e.position.column });
       });
 
-      // Ctrl+S → download
+      // Ctrl+S -> download
       // eslint-disable-next-line no-bitwise
       editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
         handleDownload();
@@ -239,7 +239,7 @@ export default function RoomClient() {
   // Global keyboard shortcuts
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
-      // Ctrl+Shift+? → shortcuts modal
+      // Ctrl+Shift+? -> shortcuts modal
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === "?") {
         e.preventDefault();
         setShowShortcuts((v) => !v);
